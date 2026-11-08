@@ -63,6 +63,9 @@ void IoHomeController::finishSolarSensor(const IoHomeQueueEntry &entry,IoHomeCom
     if(!solarIdentityMatches(s)){s.enabled=false;s.pending=false;s.sun.valid=s.battery.valid=false;s.outcome=5;return;}
     if(!s.pending)return;
     if(!solarEntryMatches(entry)){s.pending=false;s.outcome=3;if(s.poll.waiting)s.poll.finish(millis(),s.event,false);return;}
+    if((result==IoHomeCommandExchangeResult::MediaAccessFailed||mLastTxDutyDenied)&&!entry.hadPeerResponse){
+        s.pending=false;s.outcome=7;s.started[s.event==0x2001]=false;if(s.poll.waiting){s.poll.waiting=false;s.poll.dueMs=millis()+60000U;}return;
+    }
     bool accepted=false;
     if(result==IoHomeCommandExchangeResult::Completed&&mSawChallenge&&mAuthResponseSent&&mWaitingFinalResponse&&
        mLastResponseFreqIdx==entry.twoWayTxFreqIdx)
