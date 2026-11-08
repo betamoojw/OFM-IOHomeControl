@@ -7,3 +7,5 @@ Verified on 2026-11-08: upstream [8680ba4](https://github.com/laberning/home_io_
 The new RS100 captures still contain zero in the second local-sensor body byte. Upstream accepts other bytes, but no supplied original proves a nonzero variant. OFM retains its strict zero check; auxiliary B9 remains opaque. No lux or irradiance unit follows. The single battery capture is 100; codec bounds 0..100 are protocol validation, not evidence for unobserved discharge levels or a new KNX battery object.
 
 The source archive and raw acquisition metadata are retained privately in `Velocet/Findings/2026-11-08-qualified-sensors-and-atlantic/`. No private key, missing proof bytes, unconfirmed physical effect or newly successful remote CI is inferred from the baseline.
+
+The public importer additionally enforces exact reviewed register widths and factory model names. Weekly schedule bodies and possible/unreviewed trailers remain omitted, even when a source YAML contains them. Originals stay private; the public fixture retains source hashes and omission counts.

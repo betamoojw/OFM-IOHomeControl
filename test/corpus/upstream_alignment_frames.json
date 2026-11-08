@@ -45,7 +45,7 @@
       "upstream_commit": "8680ba4c8d96a3ca412c6321c3d431622b9b247a",
       "source_issue": "https://github.com/laberning/home_io_control/issues/202",
       "capture_date": "2026-11-04",
-      "omitted_frames": 65
+      "omitted_frames": 69
     },
     {
       "path": "tests/corpus/captures/probe/atlantic_adelis_probe_register_01_sweep_drying.yaml",
@@ -54,7 +54,7 @@
       "upstream_commit": "8680ba4c8d96a3ca412c6321c3d431622b9b247a",
       "source_issue": "https://github.com/laberning/home_io_control/issues/202",
       "capture_date": "2026-11-06",
-      "omitted_frames": 51
+      "omitted_frames": 55
     },
     {
       "path": "tests/corpus/captures/probe/atlantic_adelis_probe_status_mp_fp.yaml",
@@ -63,7 +63,7 @@
       "upstream_commit": "8680ba4c8d96a3ca412c6321c3d431622b9b247a",
       "source_issue": "https://github.com/laberning/home_io_control/issues/202",
       "capture_date": "2026-11-04",
-      "omitted_frames": 0
+      "omitted_frames": 1
     },
     {
       "path": "tests/corpus/captures/probe/atlantic_calypso_probe_status_mp_fp.yaml",
@@ -81,7 +81,7 @@
       "upstream_commit": "8680ba4c8d96a3ca412c6321c3d431622b9b247a",
       "source_issue": "https://github.com/laberning/home_io_control/issues/198",
       "capture_date": "2026-11-06",
-      "omitted_frames": 0
+      "omitted_frames": 3
     }
   ],
   "frames": [
@@ -237,46 +237,6 @@
     },
     {
       "source_index": 4,
-      "source_frame": 18,
-      "direction": "rx",
-      "reported_frequency_hz": null,
-      "hex": "99 00 C0 FF EE BB 0B 50 21 0C 60 01 31 00 00 00 04 02 00 00 19 20 44 50 00 00",
-      "capture_class": "A",
-      "confidence": "published_complete_frame_authentication_unverifiable",
-      "crc": "absent"
-    },
-    {
-      "source_index": 4,
-      "source_frame": 19,
-      "direction": "rx",
-      "reported_frequency_hz": null,
-      "hex": "9A 00 C0 FF EE BB 0B 50 21 0C 60 01 32 01 18 20 46 50 00 00 02 18 20 46 50 00 00",
-      "capture_class": "A",
-      "confidence": "published_complete_frame_authentication_unverifiable",
-      "crc": "absent"
-    },
-    {
-      "source_index": 4,
-      "source_frame": 20,
-      "direction": "rx",
-      "reported_frequency_hz": null,
-      "hex": "9A 00 C0 FF EE BB 0B 50 21 0C 60 01 33 03 18 20 46 50 00 00 04 18 20 46 50 00 00",
-      "capture_class": "A",
-      "confidence": "published_complete_frame_authentication_unverifiable",
-      "crc": "absent"
-    },
-    {
-      "source_index": 4,
-      "source_frame": 21,
-      "direction": "rx",
-      "reported_frequency_hz": null,
-      "hex": "9C 00 C0 FF EE BB 0B 50 21 0C 60 01 34 05 1C 28 40 50 00 00 06 1C 28 40 50 00 00 00 01",
-      "capture_class": "A",
-      "confidence": "published_complete_frame_authentication_unverifiable",
-      "crc": "absent"
-    },
-    {
-      "source_index": 4,
       "source_frame": 23,
       "direction": "rx",
       "reported_frequency_hz": null,
@@ -417,46 +377,6 @@
     },
     {
       "source_index": 5,
-      "source_frame": 50,
-      "direction": "rx",
-      "reported_frequency_hz": null,
-      "hex": "99 00 C0 FF EE BD 68 4B 21 0C 60 01 31 00 00 00 48 54 00 00 18 24 48 54 00 00",
-      "capture_class": "A",
-      "confidence": "published_complete_frame_authentication_unverifiable",
-      "crc": "absent"
-    },
-    {
-      "source_index": 5,
-      "source_frame": 51,
-      "direction": "rx",
-      "reported_frequency_hz": null,
-      "hex": "9A 00 C0 FF EE BD 68 4B 21 0C 60 01 32 01 18 24 48 54 00 00 02 18 24 48 54 00 00",
-      "capture_class": "A",
-      "confidence": "published_complete_frame_authentication_unverifiable",
-      "crc": "absent"
-    },
-    {
-      "source_index": 5,
-      "source_frame": 52,
-      "direction": "rx",
-      "reported_frequency_hz": null,
-      "hex": "9A 00 C0 FF EE BD 68 4B 21 0C 60 01 33 03 18 24 48 54 00 00 04 18 24 4A 54 00 00",
-      "capture_class": "A",
-      "confidence": "published_complete_frame_authentication_unverifiable",
-      "crc": "absent"
-    },
-    {
-      "source_index": 5,
-      "source_frame": 53,
-      "direction": "rx",
-      "reported_frequency_hz": null,
-      "hex": "9C 00 C0 FF EE BD 68 4B 21 0C 60 01 34 05 20 30 48 54 00 00 06 20 30 48 54 00 00 00 01",
-      "capture_class": "A",
-      "confidence": "published_complete_frame_authentication_unverifiable",
-      "crc": "absent"
-    },
-    {
-      "source_index": 5,
       "source_frame": 55,
       "direction": "rx",
       "reported_frequency_hz": null,
@@ -501,16 +421,6 @@
       "direction": "rx",
       "reported_frequency_hz": 868950000,
       "hex": "8E 00 C0 FF EE BB 0B 50 04 2D 00 FC 07 00 00",
-      "capture_class": "A",
-      "confidence": "published_complete_frame_authentication_unverifiable",
-      "crc": "absent"
-    },
-    {
-      "source_index": 6,
-      "source_frame": 2,
-      "direction": "rx",
-      "reported_frequency_hz": 868950000,
-      "hex": "96 00 C0 FF EE BB 0B 50 04 05 00 FC 07 00 78 D4 00 00 00 77 0C 2A DB",
       "capture_class": "A",
       "confidence": "published_complete_frame_authentication_unverifiable",
       "crc": "absent"
@@ -581,36 +491,6 @@
       "direction": "rx",
       "reported_frequency_hz": null,
       "hex": "8D 00 C0 FF EE F9 CF 0F 21 0C 60 00 06 02",
-      "capture_class": "A",
-      "confidence": "published_complete_frame_authentication_unverifiable",
-      "crc": "absent"
-    },
-    {
-      "source_index": 8,
-      "source_frame": 5,
-      "direction": "rx",
-      "reported_frequency_hz": null,
-      "hex": "94 00 C0 FF EE F9 CF 0F 21 0C 60 00 21 00 FF 00 00 00 00 00 00",
-      "capture_class": "A",
-      "confidence": "published_complete_frame_authentication_unverifiable",
-      "crc": "absent"
-    },
-    {
-      "source_index": 8,
-      "source_frame": 6,
-      "direction": "rx",
-      "reported_frequency_hz": null,
-      "hex": "94 00 C0 FF EE F9 CF 0F 21 0C 60 00 21 01 FF 00 01 01 00 00 00",
-      "capture_class": "A",
-      "confidence": "published_complete_frame_authentication_unverifiable",
-      "crc": "absent"
-    },
-    {
-      "source_index": 8,
-      "source_frame": 7,
-      "direction": "rx",
-      "reported_frequency_hz": null,
-      "hex": "94 00 C0 FF EE F9 CF 0F 21 0C 60 00 21 01 FF 01 01 01 00 00 00",
       "capture_class": "A",
       "confidence": "published_complete_frame_authentication_unverifiable",
       "crc": "absent"

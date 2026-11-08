@@ -5,13 +5,17 @@ from pathlib import Path
 import yaml
 COMMIT='8680ba4c8d96a3ca412c6321c3d431622b9b247a'
 NAMES=['probe/'+n+'.yaml' for n in ['somfy_rs100_probe_subscribe_event_battery_sx1262','somfy_rs100_probe_subscribe_event_daylight_sx1262','atlantic_adelis_probe_mode_reads','atlantic_adelis_probe_boost_remaining','atlantic_adelis_probe_register_01_sweep','atlantic_adelis_probe_register_01_sweep_drying','atlantic_adelis_probe_status_mp_fp','atlantic_calypso_probe_status_mp_fp']]+['exchange/atlantic_calypso_exchange_register_read.yaml']
-REGS={0:{0,4,6,7,8,0x17,0x21},1:{0,3,0x15,0x19,0x26,0x31,0x32,0x33,0x34,0x36,0x38,0x3A,0x3E}}
+REGS={0:{0,4,6,7,8,0x17,0x21},1:{0,3,0x15,0x19,0x26,0x36,0x38,0x3A,0x3E}}
 def safe(w):
  if len(w)<9 or len(w)>32 or w[0]&0x20 or (w[0]&31)+1!=len(w):return False
  d=w[9:]
  if w[8]==0x71:return (len(d)==10 and d[2:7]==bytes.fromhex('2005050600')) or (len(d)==6 and d[2:5]==bytes.fromhex('200101') and d[5]<=100)
- if w[8]==4:return len(d)>=6
- if w[8]==0x21:return len(d)>=4 and d[:2]==bytes.fromhex('0c60') and d[2] in REGS and d[3] in REGS[d[2]]
+ if w[8]==4:return len(d)==6
+ if w[8]==0x21:
+  if len(d)<4 or d[:2]!=bytes.fromhex('0c60') or d[2] not in REGS or d[3] not in REGS[d[2]]:return False
+  if d[2]==1 and d[3]==0x19:return d[4:].rstrip(b'\0')==b'ADELIS 2 DIGIT'
+  widths={0:{0:1,4:4,6:1,7:1,8:2,0x17:6,0x21:5},1:{0:1,3:2,0x15:2,0x26:1,0x36:1,0x38:2,0x3A:1,0x3E:1}}
+  return len(d)==4+widths[d[2]][d[3]]
  return False
 
 def build(root):
