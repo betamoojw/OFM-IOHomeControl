@@ -38,3 +38,27 @@ TEST(controller_typed_discovery_report_does_not_prove_key_recovery)
     req.setDestNode(0x00003B);ASSERT_TRUE(queueGatewayRequestAndLoop(c,req,resp));
     ASSERT_EQ(uint16_t(resp.data[0])<<2|(resp.data[1]>>6),2);
 }
+
+// Class S: issue 215 supplies a discovery/waiting scenario, not authenticated RF proof.
+TEST(controller_typed_discovery_freebox_alternate_destination_never_binds_key)
+{
+    ioHomeTestSetMillis(1000);ioHomeTestSetMicros(1000000);
+    IoHomeController c;IoHomecontrol m;initKeyExtractControllerForTest(c,m,0x112233);
+    uint8_t original[16];memcpy(original,c.getSystemKey(),16);
+    ASSERT_EQ(getAddressClass(0x00003D),IoHomeAddressClass::BroadcastDeviceType);
+    ASSERT_EQ(ioHomeDiscoveryTargetType(0x00003D),0);
+    IoHomeFrame req,resp;buildGatewayDiscoverRequest(req,0x445566);req.setDestNode(0x00003D);
+    ASSERT_TRUE(!queueGatewayRequestAndLoop(c,req,resp));
+    ASSERT_TRUE(c.startKeyExtraction());
+    for(unsigned wait:{0U,5000U,90000U}){
+        ioHomeTestAdvanceMillis(wait);c.loop();
+        ASSERT_TRUE(queueGatewayRequestAndLoop(c,req,resp));
+        ASSERT_EQ(resp.commandId,IoHomeCommand::DiscoverResponse);
+        ASSERT_EQ(uint16_t(resp.data[0])<<2|(resp.data[1]>>6),2);
+        ASSERT_EQ(c.keyExtractCandidateHubNodeId(),0x445566U);
+        for(unsigned i=0;i<10;++i){ioHomeTestAdvanceMillis(100);c.loop();}
+        ASSERT_EQ(c.keyExtractHubNodeId(),0U);
+        ASSERT_EQ(c.keyExtractStatus(),IoHomeController::KeyExtractStatus::Armed);
+        ASSERT_MEM_EQ(c.getSystemKey(),original,16);
+    }
+}
