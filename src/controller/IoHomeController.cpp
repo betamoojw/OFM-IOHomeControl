@@ -2026,6 +2026,7 @@ bool IoHomeController::sendCommandInternal(uint32_t iDestNodeId, const uint8_t *
                                            uint8_t iMaxAttempts, bool iBackground,
                                            uint8_t iFrequencyIndex, IoHomecontrolChannel *pollOwner, bool tracked, uint8_t pollReason)
 {
+    if(iCmd==IoHomeCommand::SubscribeEvent)return false; // use the bound typed API
     if(iCmd==IoHomeCommand::WritePrivate){
         auto *channel=channelForNode(iDestNodeId);
         if(!channel||!iEncKey||std::memcmp(iEncKey,channel->getEncryptionKey(),16))return false;
@@ -3243,6 +3244,7 @@ bool IoHomeController::sampleIdentityMatches(uint8_t channel,uint32_t node,const
 
 bool IoHomeController::managementIdentityMatches(const IoHomeQueueEntry &entry) const
 {
+    if(entry.sensorSubscriptionToken&&!solarEntryMatches(entry))return false;
     if(entry.registerReadToken&&!atlanticRegisterContextMatches(entry))return false;
     if(entry.productContextRevision) {
         const auto *channel=mModule?mModule->getChannel(entry.sourceChannelIndex):nullptr;
@@ -3595,6 +3597,7 @@ bool IoHomeController::sendProfileMovementCommand(uint32_t node,const uint8_t *k
 
 bool IoHomeController::queuePush(const IoHomeQueueEntry &iEntry)
 {
+    if(iEntry.command==IoHomeCommand::SubscribeEvent&&!solarEntryMatches(iEntry))return false;
     // No writable object schema has original-peer qualification.
     if(static_cast<uint8_t>(iEntry.command)==0x48)return false;
     if((mGetKeyOfNode.stage==GetKeyStage::Waiting || mGetKeyOfNode.authentication==GetKeyAuthentication::Pending)&&
@@ -4834,6 +4837,7 @@ void IoHomeController::beginExchangeDiagnosticsWindow()
 void IoHomeController::notifyCommandExchangeResult(const IoHomeQueueEntry &iEntry,
                                                    IoHomeCommandExchangeResult iResult)
 {
+    if(iEntry.sensorSubscriptionToken)finishSolarSensor(iEntry,iResult);
     if(iEntry.command==IoHomeCommand::Discover2ERequest&&iEntry.destNodeId==mVerification.node) {
         auto &v=mVerification;
         if(v.result!=IoHomeVerificationEvidence::Result::Authenticated&&v.result!=IoHomeVerificationEvidence::Result::DutyDenied&&v.result!=IoHomeVerificationEvidence::Result::CcaDenied&&v.result!=IoHomeVerificationEvidence::Result::Collision) {
@@ -7590,6 +7594,7 @@ void IoHomeController::loop()
         mReceiveConfiguration.tick(millis());
     }
     serviceObjectRead();
+    serviceSolarSensors();
     serviceAtlanticRegisterRead();
     serviceBatteryObjects();
     serviceDynamicActuators();
@@ -9172,6 +9177,22 @@ void IoHomeController::processResponse()
         }
     }
 
+    if(mCurrentCmd.sensorSubscriptionToken){
+        if(!solarEntryMatches(mCurrentCmd)){
+            notifyCommandExchangeResult(mCurrentCmd,IoHomeCommandExchangeResult::FailedBeforeAuthentication);
+            mCurrentCmd.active=false;mState=ControllerState::Idle;return;
+        }
+        const auto *sensor=solarSensor(mCurrentCmd.sourceChannelIndex);
+        bool valid=false;
+        if(sensor&&mLastResponseFreqIdx==mCurrentCmd.twoWayTxFreqIdx&&uint32_t(millis()-mStateTimer)<mResponseTimeoutMs&&
+           !(mRxFrame.ctrlByte0&(IOHC_CTRL0_MODE_1W|IOHC_CTRL0_START))&&(mRxFrame.ctrlByte0&IOHC_CTRL0_END)){
+            if(mRxFrame.commandId==IoHomeCommand::ChallengeRequest)valid=mRxFrame.dataLen==6&&!mAuthResponseSent;
+            else if(mRxFrame.commandId==IoHomeCommand::StatusUpdate&&mSawChallenge&&mAuthResponseSent&&mWaitingFinalResponse){
+                IoHomeSensorSubscription::Sample decoded;valid=IoHomeSensorSubscription::decode(sensor->event,mRxFrame,decoded,mLastResponseFreqIdx,mLastRxReadMs,millis());
+            }else if(mRxFrame.commandId==IoHomeCommand::ErrorResponse)valid=true;
+        }
+        if(!valid){mState=ControllerState::WaitResponse;return;}
+    }
     auto disposition=ioHomeResponseDisposition(mCurrentCmd.command,mRxFrame);
     if(disposition==IoHomeResponseDisposition::Accepted&&mRxFrame.commandId==IoHomeCommand::StatusUpdate) {
         const auto last=ioHomeDecodeLastCommand(mRxFrame);
@@ -9220,7 +9241,7 @@ void IoHomeController::processResponse()
            (!(mRxFrame.ctrlByte0&IOHC_CTRL0_END)||(mRxFrame.ctrlByte0&IOHC_CTRL0_START)||
             !ioHomeHighFpReplyMatches(mCurrentCmd.statusFpHigh,mRxFrame.data,mRxFrame.dataLen))) {mState=ControllerState::WaitResponse;return;}
     }
-    if(mCurrentCmd.managementRead&&!mCurrentCmd.heatingToken&&!mCurrentCmd.registerReadToken&&!mCurrentCmd.statusMpFpProbe&&!mCurrentCmd.limitationToken&&!mCurrentCmd.objectReadToken&&!mCurrentCmd.mpFpRead&&!mCurrentCmd.productActivationLength) {
+    if(mCurrentCmd.managementRead&&!mCurrentCmd.sensorSubscriptionToken&&!mCurrentCmd.heatingToken&&!mCurrentCmd.registerReadToken&&!mCurrentCmd.statusMpFpProbe&&!mCurrentCmd.limitationToken&&!mCurrentCmd.objectReadToken&&!mCurrentCmd.mpFpRead&&!mCurrentCmd.productActivationLength) {
         if(!managementIdentityMatches(mCurrentCmd)) {
             const auto failed=mCurrentCmd;
             mCurrentCmd.active=false;mState=ControllerState::Idle;
@@ -9412,7 +9433,7 @@ void IoHomeController::processResponse()
         mTrustRxPosition = false;
     }
     mCorrelatedStatusReply=!lExplicitFailure;
-    dispatchRxFrame();
+    if(!lCompletedCmd.sensorSubscriptionToken)dispatchRxFrame();
     mCorrelatedStatusReply=false;
     mTrustRxPosition = lPreviousTrustRxPosition;
     if (lAuthenticatedDirectedDiscovery && mModule)
@@ -12272,6 +12293,14 @@ bool IoHomeController::buildTxFrame(const IoHomeQueueEntry &iEntry)
         }
         break;
     }
+    case IoHomeCommand::SubscribeEvent:
+    {
+        if(!solarEntryMatches(iEntry))return false;
+        uint8_t payload[3];const auto *sensor=solarSensor(iEntry.sourceChannelIndex);
+        if(!sensor||!IoHomeSensorSubscription::build(sensor->event,payload))return false;
+        std::memcpy(mTxFrame.data,payload,3);mTxFrame.dataLen=3;mTxFrame.hasHmac=false;mAuthResponseSent=false;
+        break;
+    }
     case IoHomeCommand::Discover2ERequest:
         // A directed 0x2E probes a node already observed on the extracted
         // network. Real KLR/KIG controllers use payload 0x02 and complete the
@@ -12581,6 +12610,15 @@ void IoHomeController::dispatchRxFrame()
 
     uint32_t lSrcNode = mRxFrame.getSrcNodeId();
     uint32_t lDestNode = mRxFrame.getDestNodeId();
+    // A duplicate direct sensor final must not open another inbound challenge/ACK.
+    if(mRxFrame.commandId==IoHomeCommand::StatusUpdate&&lDestNode==mOwnNodeId&&!(mRxFrame.ctrlByte0&IOHC_CTRL0_MODE_1W))
+        for(auto *n=mSolarSensors.get();n;n=n->next.get()){
+            const auto &sensor=n->state;const auto &sample=sensor.event==0x2005?sensor.sun:sensor.battery;
+            if(solarIdentityMatches(sensor)&&!sensor.pending&&sensor.outcome==2&&sensor.node==lSrcNode&&
+               sample.frequency==mLastResponseFreqIdx&&uint32_t(millis()-sample.verifiedMs)<2000U&&
+               sensor.lastReplyLength==mRxFrame.dataLen&&!std::memcmp(sensor.lastReply,mRxFrame.data,mRxFrame.dataLen))return;
+        }
+
 
     if (mState == ControllerState::DiscoveryListening &&
         (mRxFrame.commandId == IoHomeCommand::DiscoverResponse ||
@@ -14558,3 +14596,5 @@ uint32_t IoHomeController::pairingDirectedTxFrequency()const
         mDiscoveredNodeId==mPairingKnownNodeId&&mPairDirectedRxFrequency<IOHC_NUM_FREQUENCIES?
         IOHC_FREQUENCIES[mPairDirectedRxFrequency]:kNormal2WTxFreqHz;
 }
+
+#include "IoHomeSolarSensors.inc"

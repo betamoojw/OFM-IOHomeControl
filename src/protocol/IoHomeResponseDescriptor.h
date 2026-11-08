@@ -13,7 +13,7 @@ inline IoHomeResponseDisposition ioHomeResponseDisposition(IoHomeCommand request
         return IoHomeResponseDisposition::Rejected;
     }
     static constexpr IoHomeResponseDescriptor descriptors[]={
-        {IoHomeCommand::Execute,0x04,true},{IoHomeCommand::ActivateMode,0x04,true},
+        {IoHomeCommand::SubscribeEvent,0x71,true},{IoHomeCommand::Execute,0x04,true},{IoHomeCommand::ActivateMode,0x04,true},
         {IoHomeCommand::DirectCommand,0x04,true},{IoHomeCommand::Private,0x04,true},
         {IoHomeCommand::Private2,0x0D,true},{IoHomeCommand::PriorityLevelRequest,0x1A,true},
         {IoHomeCommand::Identify,0x1F,true},{IoHomeCommand::WritePrivate,0x21,true},
@@ -39,8 +39,9 @@ inline IoHomeResponseDisposition ioHomeResponseDisposition(IoHomeCommand request
 // Execute: require the supported position envelope and a 2W final response.
 inline IoHomeResponseDisposition ioHomeResponseDisposition(IoHomeCommand request,const IoHomeFrame &frame) {
     if(frame.commandId==IoHomeCommand::StatusUpdate) {
-        return request==IoHomeCommand::Execute&&
-            ioHomeStatusUpdateKind(frame)==IoHomeStatusUpdateKind::Position&&
+        return (request==IoHomeCommand::Execute&&
+            ioHomeStatusUpdateKind(frame)==IoHomeStatusUpdateKind::Position ||
+                request==IoHomeCommand::SubscribeEvent&&ioHomeStatusUpdateKind(frame)==IoHomeStatusUpdateKind::DeviceEvent)&&
             (frame.ctrlByte0&IOHC_CTRL0_END)&&!(frame.ctrlByte0&(IOHC_CTRL0_START|IOHC_CTRL0_MODE_1W))
                 ?IoHomeResponseDisposition::Accepted:IoHomeResponseDisposition::Ignore;
     }

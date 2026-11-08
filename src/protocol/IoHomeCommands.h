@@ -102,7 +102,7 @@ enum class IoHomeCommand : uint8_t
     // Status
     StatusUpdate = 0x71,
     StatusUpdateResponse = 0x72, // ACK for unsolicited 0x71; payload {0x05, 0x00}
-                                 // Unknown73 = 0x73,  // not used — observed in rspaargaren scan list only
+                                 SubscribeEvent = 0x73, // Typed, explicitly enabled RS100 sensor subscription
 
     // Extended command range (rspaargaren scan list only, undocumented)
     // May be a parallel set for a different device class or protocol version

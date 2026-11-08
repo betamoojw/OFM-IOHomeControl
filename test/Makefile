@@ -41,7 +41,7 @@ STEFAN_GENERATED = build/stefan_dual_controller.h
 $(STEFAN_GENERATED): corpus/stefan-dual-controller-20261027.json ../tools/generate_stefan_vectors.py
 	$(PYTHON) ../tools/generate_stefan_vectors.py $@
 
-$(PROTOCOL_TARGET): $(STEFAN_GENERATED) $(CORPUS_GENERATED) $(wildcard corpus/*.h corpus/*.inc corpus/light-followup/*.h ../src/protocol/*.h ../src/controller/*.h) $(PROTOCOL_SRCS) mbedtls/aes.h test_registry.h ../src/radio/IoHomeTransmitIntent.h ../src/radio/IoHomeRfAccessPolicy.h ../src/radio/IoHomeDutyBudget.h ../src/protocol/IoHomeBatteryDiagnostics.h ../src/radio/RadioTestStub.h | $(BUILD_DIR)
+$(PROTOCOL_TARGET): $(STEFAN_GENERATED) $(CORPUS_GENERATED) $(wildcard corpus/*.h corpus/*.inc corpus/light-followup/*.h ../src/protocol/*.h ../src/controller/*.h ../src/controller/*.inc) $(PROTOCOL_SRCS) mbedtls/aes.h test_registry.h ../src/radio/IoHomeTransmitIntent.h ../src/radio/IoHomeRfAccessPolicy.h ../src/radio/IoHomeDutyBudget.h ../src/protocol/IoHomeBatteryDiagnostics.h ../src/radio/RadioTestStub.h | $(BUILD_DIR)
 	$(CXX) $(CXXFLAGS) -o $@ $(PROTOCOL_SRCS)
 
 $(SX1262_ERROR_TARGET): $(SX1262_ERROR_SRCS) | $(BUILD_DIR)
@@ -214,7 +214,7 @@ check-recovery-traces:
 
 .PHONY: check-capture-build-modes
 check-capture-build-modes: $(PROTOCOL_TARGET) $(DEBUG_PROTOCOL_TARGET)
-	@for filter in recent_observed fp_high high_fp garage_ foreign_transfer typed_discovery daylight adelis_new light_raw device_event status_event empty_object remote_settle window_main_only window_issue challenge_timing pair_discovery_channel light_followup upstream_alignment; do \
+	@for filter in recent_observed fp_high high_fp garage_ foreign_transfer typed_discovery daylight adelis_new light_raw device_event status_event empty_object remote_settle window_main_only window_issue challenge_timing pair_discovery_channel light_followup upstream_alignment solar_sensor; do \
 	  ./$(PROTOCOL_TARGET) --filter $$filter || exit $$?; \
 	  ./$(DEBUG_PROTOCOL_TARGET) --filter $$filter || exit $$?; \
 	done

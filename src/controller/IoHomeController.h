@@ -1,3 +1,4 @@
+#include "../protocol/IoHomeSensorSubscription.h"
 #include "../protocol/IoHomeForeignActivity.h"
 #include "../protocol/IoHomeManagementCodecs.h"
 #include "../protocol/IoHomeObjectTransfer.h"
@@ -160,6 +161,7 @@ struct IoHomeQueueEntry
   uint32_t productContextRevision;
   uint32_t atlanticToken=0;
   uint32_t registerReadToken=0;
+  uint32_t sensorSubscriptionToken=0;
   uint32_t heatingToken=0;
   uint8_t heatingData[6]{};
   uint8_t heatingLength=0;
@@ -642,6 +644,10 @@ public:
   void invalidateHeatingChannel(uint8_t channel);
   bool requestHomeAway(IoHomecontrolChannel *channel,bool home);
   bool cancelHomeAway(uint8_t channel);
+  bool configureSolarSensor(IoHomecontrolChannel *channel,bool enabled);
+  bool requestSolarSensor(IoHomecontrolChannel *channel,uint16_t event);
+  const IoHomeSensorSubscription::State *solarSensor(uint8_t channel)const;
+  void printSolarSensor(uint8_t channel)const;
   bool startAtlanticRegisterRead(IoHomecontrolChannel *channel,uint8_t family,uint8_t first,uint8_t count=1,IoHomeAtlanticRead::Model model=IoHomeAtlanticRead::Model::Raw);
   bool cancelAtlanticRegisterRead(uint32_t token);
   const IoHomeAtlanticRead::State &atlanticRegisterRead() const {
@@ -1317,6 +1323,14 @@ public:
   const Radio &radio() const;
 
 private:
+  struct SolarSensorNode {IoHomeSensorSubscription::State state;std::unique_ptr<SolarSensorNode> next;};
+  std::unique_ptr<SolarSensorNode> mSolarSensors;
+  uint32_t mNextSolarToken=0;
+  SolarSensorNode *findSolarSensor(uint8_t channel)const;
+  bool solarIdentityMatches(const IoHomeSensorSubscription::State &)const;
+  bool solarEntryMatches(const IoHomeQueueEntry &)const;
+  void serviceSolarSensors();
+  void finishSolarSensor(const IoHomeQueueEntry &,IoHomeCommandExchangeResult);
   std::unique_ptr<ChallengeTiming[]> mChallengeTimings;
   uint32_t mChallengeTimingCount=0,mLastRxReadUs=0;
   bool mChallengeCritical=false;

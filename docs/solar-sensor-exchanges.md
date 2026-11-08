@@ -1,0 +1,9 @@
+# Qualified RS100 sensor exchanges
+
+Source: [upstream sensor implementation](https://github.com/laberning/home_io_control/commit/a0d103591f3d340975a40745b894fbfbb85f9237) and the exact original sun/battery captures in `upstream_alignment_frames.json`. Captures contain replies, not a complete verifiable authentication transcript. The controller tests supply synthetic keys/nonces and exercise the production queue, builder and exchange path.
+
+`iohc solar CHANNEL enable CONFIRM_RS100_SOLAR` explicitly grants a volatile diagnostic permission only for a paired 2W Somfy profile 2/0 device with the observed GI1 signature `5163341E02`. Protocol type alone cannot enable it. `sun` and `battery` send exactly 0x73 DATA 01 20 05 / 01 20 01; `status` reads the local cache and `disable` revokes permission. Each request is one attempt, rate-limited per event. There is no unsubscribe, boot write, arbitrary event or generic raw subscription endpoint.
+
+Direct 0x71 replies use their own owner/token/key/gateway/system-key/revision/frequency/deadline checks and require the matching outbound 0x3C/0x3D exchange plus expected event schema. They never set the unsolicited inbound-proof flag, update position/rain/error KOs or issue a second ACK. Exact successful finals are deduplicated for two seconds. A protocol-correlated outbound reply is not an independently MAC-verified inbound event; bare community reply bytes alone cannot establish proof. Unsolicited events retain the existing separate inbound challenge requirement.
+
+Battery decoding accepts exactly one event byte in 0..100, including zero. Only 100 has been captured; missing replies do not become zero. Sun stays unsigned BE16 with unknown units and an opaque auxiliary byte. No new KNX objects, lux factor or battery discharge scale are introduced. Identity changes revoke permission and samples; stale values retain their original timestamps and are not refreshed by failure.

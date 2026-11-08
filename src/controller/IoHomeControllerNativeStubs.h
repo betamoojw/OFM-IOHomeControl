@@ -472,6 +472,7 @@ public:
        mProtocolIdentity.manufacturerId!=uint8_t(IoHomeManufacturer::Velux)||mProtocolIdentity.profile!=4||mProtocolIdentity.subProfile>1))return false;
     mWindowMainOnly=enabled;return true;
   }
+  bool isMoving()const{return mStatusMoving;}
   bool windowMainOnly() const {
     const auto *p=getEffectiveProfileDescriptor();
     return mWindowMainOnly&&mPaired&&!mIs1W&&mProtocolIdentity.valid&&mProtocolIdentity.ioAddress==mNodeId&&

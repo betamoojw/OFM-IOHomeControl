@@ -4559,6 +4559,19 @@ bool IoHomecontrol::processCommand(const std::string iCmd, bool iDebugKo)
         else logInfoP("Usage: iohc dynamic CHANNEL status|read");
         return true;
     }
+    if(iCmd.rfind("iohc solar ",0)==0) {
+        if(iDebugKo){logInfoP("Solar sensor writes require local console");return true;}
+        unsigned index=0;char action[16]{},confirm[24]{};char extra=0;
+        const int fields=sscanf(iCmd.c_str(),"iohc solar %u %15s %23s %c",&index,action,confirm,&extra);
+        if(index<1||index>mNumChannels||fields<2||fields>3){logInfoP("Usage: iohc solar CHANNEL enable CONFIRM_RS100_SOLAR|disable|sun|battery|status");return true;}
+        auto *ch=mChannels[index-1];if(!ch)return true;
+        if(!std::strcmp(action,"enable")&&fields==3&&!std::strcmp(confirm,"CONFIRM_RS100_SOLAR"))logInfoP("Solar sensor explicit enable=%u",mController.configureSolarSensor(ch,true));
+        else if(fields!=2)logInfoP("Unexpected solar sensor arguments");
+        else if(!std::strcmp(action,"disable"))logInfoP("Solar sensor disabled=%u",mController.configureSolarSensor(ch,false));
+        else if(!std::strcmp(action,"status"))mController.printSolarSensor(index-1);
+        else if(!std::strcmp(action,"sun")||!std::strcmp(action,"battery"))logInfoP("Solar sensor state-changing subscription queued=%u",mController.requestSolarSensor(ch,!std::strcmp(action,"sun")?0x2005:0x2001));
+        else logInfoP("Unknown solar sensor action");return true;
+    }
     if(iCmd.rfind("iohc pair-rx-channel ",0)==0) {
         if(iDebugKo){logInfoP("Experimental pairing requires local console");return true;}
         unsigned index=0,node=0;char confirm[8]{};char extra=0;
