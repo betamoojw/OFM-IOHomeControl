@@ -1,0 +1,679 @@
+{
+  "schema_version": 1,
+  "upstream_commit": "8680ba4c8d96a3ca412c6321c3d431622b9b247a",
+  "sources": [
+    {
+      "path": "tests/corpus/captures/probe/somfy_rs100_probe_subscribe_event_battery_sx1262.yaml",
+      "source_url": "https://github.com/laberning/home_io_control/blob/8680ba4c8d96a3ca412c6321c3d431622b9b247a/tests/corpus/captures/probe/somfy_rs100_probe_subscribe_event_battery_sx1262.yaml",
+      "source_sha256": "c974b00bba179e44540547a4cd379fe55682dab48b54fcf55058867b8e146184",
+      "upstream_commit": "8680ba4c8d96a3ca412c6321c3d431622b9b247a",
+      "source_issue": "https://github.com/laberning/home_io_control/issues/156",
+      "capture_date": "2026-11-04",
+      "omitted_frames": 0
+    },
+    {
+      "path": "tests/corpus/captures/probe/somfy_rs100_probe_subscribe_event_daylight_sx1262.yaml",
+      "source_url": "https://github.com/laberning/home_io_control/blob/8680ba4c8d96a3ca412c6321c3d431622b9b247a/tests/corpus/captures/probe/somfy_rs100_probe_subscribe_event_daylight_sx1262.yaml",
+      "source_sha256": "d6bad69e0e6fb846214fd1858a0a04de5fefecebfc137f7774030ca6dc34b2b5",
+      "upstream_commit": "8680ba4c8d96a3ca412c6321c3d431622b9b247a",
+      "source_issue": "https://github.com/laberning/home_io_control/issues/156",
+      "capture_date": "2026-11-04",
+      "omitted_frames": 0
+    },
+    {
+      "path": "tests/corpus/captures/probe/atlantic_adelis_probe_mode_reads.yaml",
+      "source_url": "https://github.com/laberning/home_io_control/blob/8680ba4c8d96a3ca412c6321c3d431622b9b247a/tests/corpus/captures/probe/atlantic_adelis_probe_mode_reads.yaml",
+      "source_sha256": "968c83063d4c017252d691b4ab747cd5e3298a9c049d1c9c90296e44e927b305",
+      "upstream_commit": "8680ba4c8d96a3ca412c6321c3d431622b9b247a",
+      "source_issue": "https://github.com/laberning/home_io_control/issues/202",
+      "capture_date": "2026-11-06",
+      "omitted_frames": 0
+    },
+    {
+      "path": "tests/corpus/captures/probe/atlantic_adelis_probe_boost_remaining.yaml",
+      "source_url": "https://github.com/laberning/home_io_control/blob/8680ba4c8d96a3ca412c6321c3d431622b9b247a/tests/corpus/captures/probe/atlantic_adelis_probe_boost_remaining.yaml",
+      "source_sha256": "39a184da96baaef577a5062a87bf0edecdcf27464442efcb1cc0bda7164355a8",
+      "upstream_commit": "8680ba4c8d96a3ca412c6321c3d431622b9b247a",
+      "source_issue": "https://github.com/laberning/home_io_control/issues/202",
+      "capture_date": "2026-11-06",
+      "omitted_frames": 0
+    },
+    {
+      "path": "tests/corpus/captures/probe/atlantic_adelis_probe_register_01_sweep.yaml",
+      "source_url": "https://github.com/laberning/home_io_control/blob/8680ba4c8d96a3ca412c6321c3d431622b9b247a/tests/corpus/captures/probe/atlantic_adelis_probe_register_01_sweep.yaml",
+      "source_sha256": "ad187314e8d995bb843502d740b890044f67073beb906cb15c41d8abc727eb56",
+      "upstream_commit": "8680ba4c8d96a3ca412c6321c3d431622b9b247a",
+      "source_issue": "https://github.com/laberning/home_io_control/issues/202",
+      "capture_date": "2026-11-04",
+      "omitted_frames": 65
+    },
+    {
+      "path": "tests/corpus/captures/probe/atlantic_adelis_probe_register_01_sweep_drying.yaml",
+      "source_url": "https://github.com/laberning/home_io_control/blob/8680ba4c8d96a3ca412c6321c3d431622b9b247a/tests/corpus/captures/probe/atlantic_adelis_probe_register_01_sweep_drying.yaml",
+      "source_sha256": "996902d83b06e7f44929dc19f2b09f722dc3dede56078869aeb3651ed3d7c3bf",
+      "upstream_commit": "8680ba4c8d96a3ca412c6321c3d431622b9b247a",
+      "source_issue": "https://github.com/laberning/home_io_control/issues/202",
+      "capture_date": "2026-11-06",
+      "omitted_frames": 51
+    },
+    {
+      "path": "tests/corpus/captures/probe/atlantic_adelis_probe_status_mp_fp.yaml",
+      "source_url": "https://github.com/laberning/home_io_control/blob/8680ba4c8d96a3ca412c6321c3d431622b9b247a/tests/corpus/captures/probe/atlantic_adelis_probe_status_mp_fp.yaml",
+      "source_sha256": "c64ca89c2a3e39d46c67bcf3d5850a02480fd8c5ac512177348845ce99510424",
+      "upstream_commit": "8680ba4c8d96a3ca412c6321c3d431622b9b247a",
+      "source_issue": "https://github.com/laberning/home_io_control/issues/202",
+      "capture_date": "2026-11-04",
+      "omitted_frames": 0
+    },
+    {
+      "path": "tests/corpus/captures/probe/atlantic_calypso_probe_status_mp_fp.yaml",
+      "source_url": "https://github.com/laberning/home_io_control/blob/8680ba4c8d96a3ca412c6321c3d431622b9b247a/tests/corpus/captures/probe/atlantic_calypso_probe_status_mp_fp.yaml",
+      "source_sha256": "7f9e180a34f6bd7c7234defea2e77133a6d44a83539c84c47ea12949cbf637cd",
+      "upstream_commit": "8680ba4c8d96a3ca412c6321c3d431622b9b247a",
+      "source_issue": "https://github.com/laberning/home_io_control/issues/198",
+      "capture_date": "2026-11-06",
+      "omitted_frames": 0
+    },
+    {
+      "path": "tests/corpus/captures/exchange/atlantic_calypso_exchange_register_read.yaml",
+      "source_url": "https://github.com/laberning/home_io_control/blob/8680ba4c8d96a3ca412c6321c3d431622b9b247a/tests/corpus/captures/exchange/atlantic_calypso_exchange_register_read.yaml",
+      "source_sha256": "fe24a244176b6f4206a4baa3b6febaf994a9ff230c2920b681676eee17641400",
+      "upstream_commit": "8680ba4c8d96a3ca412c6321c3d431622b9b247a",
+      "source_issue": "https://github.com/laberning/home_io_control/issues/198",
+      "capture_date": "2026-11-06",
+      "omitted_frames": 0
+    }
+  ],
+  "frames": [
+    {
+      "source_index": 0,
+      "source_frame": 1,
+      "direction": "rx",
+      "reported_frequency_hz": 868950000,
+      "hex": "8E 00 A1 B2 C3 24 63 5F 71 05 60 20 01 01 64",
+      "capture_class": "A",
+      "confidence": "published_complete_frame_authentication_unverifiable",
+      "crc": "absent"
+    },
+    {
+      "source_index": 1,
+      "source_frame": 1,
+      "direction": "rx",
+      "reported_frequency_hz": 868950000,
+      "hex": "92 00 A1 B2 C3 24 63 5F 71 05 60 20 05 05 06 00 00 B7 B9",
+      "capture_class": "A",
+      "confidence": "published_complete_frame_authentication_unverifiable",
+      "crc": "absent"
+    },
+    {
+      "source_index": 1,
+      "source_frame": 2,
+      "direction": "rx",
+      "reported_frequency_hz": 868950000,
+      "hex": "92 00 A1 B2 C3 24 63 5F 71 05 60 20 05 05 06 00 02 E8 B9",
+      "capture_class": "A",
+      "confidence": "published_complete_frame_authentication_unverifiable",
+      "crc": "absent"
+    },
+    {
+      "source_index": 2,
+      "source_frame": 1,
+      "direction": "rx",
+      "reported_frequency_hz": 868950000,
+      "hex": "8D 00 C0 FF EE BD 68 4B 21 0C 60 01 36 03",
+      "capture_class": "A",
+      "confidence": "published_complete_frame_authentication_unverifiable",
+      "crc": "absent"
+    },
+    {
+      "source_index": 2,
+      "source_frame": 2,
+      "direction": "rx",
+      "reported_frequency_hz": 868950000,
+      "hex": "8D 00 C0 FF EE BD 68 4B 21 0C 60 01 00 03",
+      "capture_class": "A",
+      "confidence": "published_complete_frame_authentication_unverifiable",
+      "crc": "absent"
+    },
+    {
+      "source_index": 2,
+      "source_frame": 3,
+      "direction": "rx",
+      "reported_frequency_hz": 868950000,
+      "hex": "8D 00 C0 FF EE BD 68 4B 21 0C 60 01 36 02",
+      "capture_class": "A",
+      "confidence": "published_complete_frame_authentication_unverifiable",
+      "crc": "absent"
+    },
+    {
+      "source_index": 2,
+      "source_frame": 4,
+      "direction": "rx",
+      "reported_frequency_hz": 868950000,
+      "hex": "8D 00 C0 FF EE BD 68 4B 21 0C 60 01 00 02",
+      "capture_class": "A",
+      "confidence": "published_complete_frame_authentication_unverifiable",
+      "crc": "absent"
+    },
+    {
+      "source_index": 2,
+      "source_frame": 5,
+      "direction": "rx",
+      "reported_frequency_hz": 868950000,
+      "hex": "8D 00 C0 FF EE BD 68 4B 21 0C 60 01 36 02",
+      "capture_class": "A",
+      "confidence": "published_complete_frame_authentication_unverifiable",
+      "crc": "absent"
+    },
+    {
+      "source_index": 2,
+      "source_frame": 6,
+      "direction": "rx",
+      "reported_frequency_hz": 868950000,
+      "hex": "8D 00 C0 FF EE BD 68 4B 21 0C 60 01 00 02",
+      "capture_class": "A",
+      "confidence": "published_complete_frame_authentication_unverifiable",
+      "crc": "absent"
+    },
+    {
+      "source_index": 2,
+      "source_frame": 7,
+      "direction": "rx",
+      "reported_frequency_hz": 868950000,
+      "hex": "8D 00 C0 FF EE BD 68 4B 21 0C 60 01 36 00",
+      "capture_class": "A",
+      "confidence": "published_complete_frame_authentication_unverifiable",
+      "crc": "absent"
+    },
+    {
+      "source_index": 2,
+      "source_frame": 8,
+      "direction": "rx",
+      "reported_frequency_hz": 868950000,
+      "hex": "8D 00 C0 FF EE BD 68 4B 21 0C 60 01 00 04",
+      "capture_class": "A",
+      "confidence": "published_complete_frame_authentication_unverifiable",
+      "crc": "absent"
+    },
+    {
+      "source_index": 3,
+      "source_frame": 1,
+      "direction": "rx",
+      "reported_frequency_hz": 868950000,
+      "hex": "8D 00 C0 FF EE BD 68 4B 21 0C 60 01 3A 3C",
+      "capture_class": "A",
+      "confidence": "published_complete_frame_authentication_unverifiable",
+      "crc": "absent"
+    },
+    {
+      "source_index": 3,
+      "source_frame": 2,
+      "direction": "rx",
+      "reported_frequency_hz": 868950000,
+      "hex": "8D 00 C0 FF EE BD 68 4B 21 0C 60 01 3A 37",
+      "capture_class": "A",
+      "confidence": "published_complete_frame_authentication_unverifiable",
+      "crc": "absent"
+    },
+    {
+      "source_index": 4,
+      "source_frame": 1,
+      "direction": "rx",
+      "reported_frequency_hz": null,
+      "hex": "8D 00 C0 FF EE BB 0B 50 21 0C 60 01 00 03",
+      "capture_class": "A",
+      "confidence": "published_complete_frame_authentication_unverifiable",
+      "crc": "absent"
+    },
+    {
+      "source_index": 4,
+      "source_frame": 4,
+      "direction": "rx",
+      "reported_frequency_hz": null,
+      "hex": "8E 00 C0 FF EE BB 0B 50 21 0C 60 01 03 C3 00",
+      "capture_class": "A",
+      "confidence": "published_complete_frame_authentication_unverifiable",
+      "crc": "absent"
+    },
+    {
+      "source_index": 4,
+      "source_frame": 18,
+      "direction": "rx",
+      "reported_frequency_hz": null,
+      "hex": "99 00 C0 FF EE BB 0B 50 21 0C 60 01 31 00 00 00 04 02 00 00 19 20 44 50 00 00",
+      "capture_class": "A",
+      "confidence": "published_complete_frame_authentication_unverifiable",
+      "crc": "absent"
+    },
+    {
+      "source_index": 4,
+      "source_frame": 19,
+      "direction": "rx",
+      "reported_frequency_hz": null,
+      "hex": "9A 00 C0 FF EE BB 0B 50 21 0C 60 01 32 01 18 20 46 50 00 00 02 18 20 46 50 00 00",
+      "capture_class": "A",
+      "confidence": "published_complete_frame_authentication_unverifiable",
+      "crc": "absent"
+    },
+    {
+      "source_index": 4,
+      "source_frame": 20,
+      "direction": "rx",
+      "reported_frequency_hz": null,
+      "hex": "9A 00 C0 FF EE BB 0B 50 21 0C 60 01 33 03 18 20 46 50 00 00 04 18 20 46 50 00 00",
+      "capture_class": "A",
+      "confidence": "published_complete_frame_authentication_unverifiable",
+      "crc": "absent"
+    },
+    {
+      "source_index": 4,
+      "source_frame": 21,
+      "direction": "rx",
+      "reported_frequency_hz": null,
+      "hex": "9C 00 C0 FF EE BB 0B 50 21 0C 60 01 34 05 1C 28 40 50 00 00 06 1C 28 40 50 00 00 00 01",
+      "capture_class": "A",
+      "confidence": "published_complete_frame_authentication_unverifiable",
+      "crc": "absent"
+    },
+    {
+      "source_index": 4,
+      "source_frame": 23,
+      "direction": "rx",
+      "reported_frequency_hz": null,
+      "hex": "8D 00 C0 FF EE BB 0B 50 21 0C 60 01 36 03",
+      "capture_class": "A",
+      "confidence": "published_complete_frame_authentication_unverifiable",
+      "crc": "absent"
+    },
+    {
+      "source_index": 4,
+      "source_frame": 25,
+      "direction": "rx",
+      "reported_frequency_hz": null,
+      "hex": "8E 00 C0 FF EE BB 0B 50 21 0C 60 01 38 C3 00",
+      "capture_class": "A",
+      "confidence": "published_complete_frame_authentication_unverifiable",
+      "crc": "absent"
+    },
+    {
+      "source_index": 4,
+      "source_frame": 27,
+      "direction": "rx",
+      "reported_frequency_hz": null,
+      "hex": "8D 00 C0 FF EE BB 0B 50 21 0C 60 01 3A 1C",
+      "capture_class": "A",
+      "confidence": "published_complete_frame_authentication_unverifiable",
+      "crc": "absent"
+    },
+    {
+      "source_index": 4,
+      "source_frame": 31,
+      "direction": "rx",
+      "reported_frequency_hz": null,
+      "hex": "8D 00 C0 FF EE BB 0B 50 21 0C 60 01 3E 01",
+      "capture_class": "A",
+      "confidence": "published_complete_frame_authentication_unverifiable",
+      "crc": "absent"
+    },
+    {
+      "source_index": 4,
+      "source_frame": 33,
+      "direction": "rx",
+      "reported_frequency_hz": null,
+      "hex": "8D 00 C0 FF EE BB 0B 50 21 0C 60 01 00 03",
+      "capture_class": "A",
+      "confidence": "published_complete_frame_authentication_unverifiable",
+      "crc": "absent"
+    },
+    {
+      "source_index": 4,
+      "source_frame": 36,
+      "direction": "rx",
+      "reported_frequency_hz": null,
+      "hex": "8E 00 C0 FF EE BB 0B 50 21 0C 60 01 03 C3 00",
+      "capture_class": "A",
+      "confidence": "published_complete_frame_authentication_unverifiable",
+      "crc": "absent"
+    },
+    {
+      "source_index": 4,
+      "source_frame": 54,
+      "direction": "rx",
+      "reported_frequency_hz": null,
+      "hex": "8E 00 C0 FF EE BB 0B 50 21 0C 60 01 15 66 08",
+      "capture_class": "A",
+      "confidence": "published_complete_frame_authentication_unverifiable",
+      "crc": "absent"
+    },
+    {
+      "source_index": 4,
+      "source_frame": 58,
+      "direction": "rx",
+      "reported_frequency_hz": null,
+      "hex": "9D 00 C0 FF EE BB 0B 50 21 0C 60 01 19 41 44 45 4C 49 53 20 32 20 44 49 47 49 54 00 00 00",
+      "capture_class": "A",
+      "confidence": "published_complete_frame_authentication_unverifiable",
+      "crc": "absent"
+    },
+    {
+      "source_index": 4,
+      "source_frame": 71,
+      "direction": "rx",
+      "reported_frequency_hz": null,
+      "hex": "8D 00 C0 FF EE BB 0B 50 21 0C 60 01 26 64",
+      "capture_class": "A",
+      "confidence": "published_complete_frame_authentication_unverifiable",
+      "crc": "absent"
+    },
+    {
+      "source_index": 5,
+      "source_frame": 1,
+      "direction": "rx",
+      "reported_frequency_hz": null,
+      "hex": "8D 00 C0 FF EE BD 68 4B 21 0C 60 01 00 03",
+      "capture_class": "A",
+      "confidence": "published_complete_frame_authentication_unverifiable",
+      "crc": "absent"
+    },
+    {
+      "source_index": 5,
+      "source_frame": 4,
+      "direction": "rx",
+      "reported_frequency_hz": null,
+      "hex": "8E 00 C0 FF EE BD 68 4B 21 0C 60 01 03 BE 00",
+      "capture_class": "A",
+      "confidence": "published_complete_frame_authentication_unverifiable",
+      "crc": "absent"
+    },
+    {
+      "source_index": 5,
+      "source_frame": 22,
+      "direction": "rx",
+      "reported_frequency_hz": null,
+      "hex": "8E 00 C0 FF EE BD 68 4B 21 0C 60 01 15 B7 07",
+      "capture_class": "A",
+      "confidence": "published_complete_frame_authentication_unverifiable",
+      "crc": "absent"
+    },
+    {
+      "source_index": 5,
+      "source_frame": 26,
+      "direction": "rx",
+      "reported_frequency_hz": null,
+      "hex": "9D 00 C0 FF EE BD 68 4B 21 0C 60 01 19 41 44 45 4C 49 53 20 32 20 44 49 47 49 54 00 00 00",
+      "capture_class": "A",
+      "confidence": "published_complete_frame_authentication_unverifiable",
+      "crc": "absent"
+    },
+    {
+      "source_index": 5,
+      "source_frame": 39,
+      "direction": "rx",
+      "reported_frequency_hz": null,
+      "hex": "8D 00 C0 FF EE BD 68 4B 21 0C 60 01 26 64",
+      "capture_class": "A",
+      "confidence": "published_complete_frame_authentication_unverifiable",
+      "crc": "absent"
+    },
+    {
+      "source_index": 5,
+      "source_frame": 50,
+      "direction": "rx",
+      "reported_frequency_hz": null,
+      "hex": "99 00 C0 FF EE BD 68 4B 21 0C 60 01 31 00 00 00 48 54 00 00 18 24 48 54 00 00",
+      "capture_class": "A",
+      "confidence": "published_complete_frame_authentication_unverifiable",
+      "crc": "absent"
+    },
+    {
+      "source_index": 5,
+      "source_frame": 51,
+      "direction": "rx",
+      "reported_frequency_hz": null,
+      "hex": "9A 00 C0 FF EE BD 68 4B 21 0C 60 01 32 01 18 24 48 54 00 00 02 18 24 48 54 00 00",
+      "capture_class": "A",
+      "confidence": "published_complete_frame_authentication_unverifiable",
+      "crc": "absent"
+    },
+    {
+      "source_index": 5,
+      "source_frame": 52,
+      "direction": "rx",
+      "reported_frequency_hz": null,
+      "hex": "9A 00 C0 FF EE BD 68 4B 21 0C 60 01 33 03 18 24 48 54 00 00 04 18 24 4A 54 00 00",
+      "capture_class": "A",
+      "confidence": "published_complete_frame_authentication_unverifiable",
+      "crc": "absent"
+    },
+    {
+      "source_index": 5,
+      "source_frame": 53,
+      "direction": "rx",
+      "reported_frequency_hz": null,
+      "hex": "9C 00 C0 FF EE BD 68 4B 21 0C 60 01 34 05 20 30 48 54 00 00 06 20 30 48 54 00 00 00 01",
+      "capture_class": "A",
+      "confidence": "published_complete_frame_authentication_unverifiable",
+      "crc": "absent"
+    },
+    {
+      "source_index": 5,
+      "source_frame": 55,
+      "direction": "rx",
+      "reported_frequency_hz": null,
+      "hex": "8D 00 C0 FF EE BD 68 4B 21 0C 60 01 36 03",
+      "capture_class": "A",
+      "confidence": "published_complete_frame_authentication_unverifiable",
+      "crc": "absent"
+    },
+    {
+      "source_index": 5,
+      "source_frame": 57,
+      "direction": "rx",
+      "reported_frequency_hz": null,
+      "hex": "8E 00 C0 FF EE BD 68 4B 21 0C 60 01 38 BE 00",
+      "capture_class": "A",
+      "confidence": "published_complete_frame_authentication_unverifiable",
+      "crc": "absent"
+    },
+    {
+      "source_index": 5,
+      "source_frame": 59,
+      "direction": "rx",
+      "reported_frequency_hz": null,
+      "hex": "8D 00 C0 FF EE BD 68 4B 21 0C 60 01 3A 00",
+      "capture_class": "A",
+      "confidence": "published_complete_frame_authentication_unverifiable",
+      "crc": "absent"
+    },
+    {
+      "source_index": 5,
+      "source_frame": 63,
+      "direction": "rx",
+      "reported_frequency_hz": null,
+      "hex": "8D 00 C0 FF EE BD 68 4B 21 0C 60 01 3E 02",
+      "capture_class": "A",
+      "confidence": "published_complete_frame_authentication_unverifiable",
+      "crc": "absent"
+    },
+    {
+      "source_index": 6,
+      "source_frame": 1,
+      "direction": "rx",
+      "reported_frequency_hz": 868950000,
+      "hex": "8E 00 C0 FF EE BB 0B 50 04 2D 00 FC 07 00 00",
+      "capture_class": "A",
+      "confidence": "published_complete_frame_authentication_unverifiable",
+      "crc": "absent"
+    },
+    {
+      "source_index": 6,
+      "source_frame": 2,
+      "direction": "rx",
+      "reported_frequency_hz": 868950000,
+      "hex": "96 00 C0 FF EE BB 0B 50 04 05 00 FC 07 00 78 D4 00 00 00 77 0C 2A DB",
+      "capture_class": "A",
+      "confidence": "published_complete_frame_authentication_unverifiable",
+      "crc": "absent"
+    },
+    {
+      "source_index": 7,
+      "source_frame": 1,
+      "direction": "rx",
+      "reported_frequency_hz": 868950000,
+      "hex": "8E 00 C0 FF EE F9 CF 0F 04 2D 00 A1 E8 00 00",
+      "capture_class": "A",
+      "confidence": "published_complete_frame_authentication_unverifiable",
+      "crc": "absent"
+    },
+    {
+      "source_index": 7,
+      "source_frame": 2,
+      "direction": "rx",
+      "reported_frequency_hz": 868950000,
+      "hex": "8E 00 C0 FF EE F9 CF 0F 04 2D 00 C8 00 00 00",
+      "capture_class": "A",
+      "confidence": "published_complete_frame_authentication_unverifiable",
+      "crc": "absent"
+    },
+    {
+      "source_index": 7,
+      "source_frame": 3,
+      "direction": "rx",
+      "reported_frequency_hz": 868950000,
+      "hex": "8E 00 C0 FF EE F9 CF 0F 04 2D 00 BE 7A 00 00",
+      "capture_class": "A",
+      "confidence": "published_complete_frame_authentication_unverifiable",
+      "crc": "absent"
+    },
+    {
+      "source_index": 8,
+      "source_frame": 1,
+      "direction": "rx",
+      "reported_frequency_hz": null,
+      "hex": "92 00 C0 FF EE F9 CF 0F 21 0C 60 00 17 01 F0 00 5C 02 78",
+      "capture_class": "A",
+      "confidence": "published_complete_frame_authentication_unverifiable",
+      "crc": "absent"
+    },
+    {
+      "source_index": 8,
+      "source_frame": 2,
+      "direction": "rx",
+      "reported_frequency_hz": null,
+      "hex": "8D 00 C0 FF EE F9 CF 0F 21 0C 60 00 06 00",
+      "capture_class": "A",
+      "confidence": "published_complete_frame_authentication_unverifiable",
+      "crc": "absent"
+    },
+    {
+      "source_index": 8,
+      "source_frame": 3,
+      "direction": "rx",
+      "reported_frequency_hz": null,
+      "hex": "8D 00 C0 FF EE F9 CF 0F 21 0C 60 00 06 01",
+      "capture_class": "A",
+      "confidence": "published_complete_frame_authentication_unverifiable",
+      "crc": "absent"
+    },
+    {
+      "source_index": 8,
+      "source_frame": 4,
+      "direction": "rx",
+      "reported_frequency_hz": null,
+      "hex": "8D 00 C0 FF EE F9 CF 0F 21 0C 60 00 06 02",
+      "capture_class": "A",
+      "confidence": "published_complete_frame_authentication_unverifiable",
+      "crc": "absent"
+    },
+    {
+      "source_index": 8,
+      "source_frame": 5,
+      "direction": "rx",
+      "reported_frequency_hz": null,
+      "hex": "94 00 C0 FF EE F9 CF 0F 21 0C 60 00 21 00 FF 00 00 00 00 00 00",
+      "capture_class": "A",
+      "confidence": "published_complete_frame_authentication_unverifiable",
+      "crc": "absent"
+    },
+    {
+      "source_index": 8,
+      "source_frame": 6,
+      "direction": "rx",
+      "reported_frequency_hz": null,
+      "hex": "94 00 C0 FF EE F9 CF 0F 21 0C 60 00 21 01 FF 00 01 01 00 00 00",
+      "capture_class": "A",
+      "confidence": "published_complete_frame_authentication_unverifiable",
+      "crc": "absent"
+    },
+    {
+      "source_index": 8,
+      "source_frame": 7,
+      "direction": "rx",
+      "reported_frequency_hz": null,
+      "hex": "94 00 C0 FF EE F9 CF 0F 21 0C 60 00 21 01 FF 01 01 01 00 00 00",
+      "capture_class": "A",
+      "confidence": "published_complete_frame_authentication_unverifiable",
+      "crc": "absent"
+    },
+    {
+      "source_index": 8,
+      "source_frame": 8,
+      "direction": "rx",
+      "reported_frequency_hz": null,
+      "hex": "90 00 C0 FF EE F9 CF 0F 21 0C 60 00 04 00 1B F3 42",
+      "capture_class": "A",
+      "confidence": "published_complete_frame_authentication_unverifiable",
+      "crc": "absent"
+    },
+    {
+      "source_index": 8,
+      "source_frame": 9,
+      "direction": "rx",
+      "reported_frequency_hz": null,
+      "hex": "90 00 C0 FF EE F9 CF 0F 21 0C 60 00 04 00 1B F3 97",
+      "capture_class": "A",
+      "confidence": "published_complete_frame_authentication_unverifiable",
+      "crc": "absent"
+    },
+    {
+      "source_index": 8,
+      "source_frame": 10,
+      "direction": "rx",
+      "reported_frequency_hz": null,
+      "hex": "8D 00 C0 FF EE F9 CF 0F 21 0C 60 00 00 01",
+      "capture_class": "A",
+      "confidence": "published_complete_frame_authentication_unverifiable",
+      "crc": "absent"
+    },
+    {
+      "source_index": 8,
+      "source_frame": 11,
+      "direction": "rx",
+      "reported_frequency_hz": null,
+      "hex": "8D 00 C0 FF EE F9 CF 0F 21 0C 60 00 00 00",
+      "capture_class": "A",
+      "confidence": "published_complete_frame_authentication_unverifiable",
+      "crc": "absent"
+    },
+    {
+      "source_index": 8,
+      "source_frame": 12,
+      "direction": "rx",
+      "reported_frequency_hz": null,
+      "hex": "8D 00 C0 FF EE F9 CF 0F 21 0C 60 00 07 41",
+      "capture_class": "A",
+      "confidence": "published_complete_frame_authentication_unverifiable",
+      "crc": "absent"
+    },
+    {
+      "source_index": 8,
+      "source_frame": 13,
+      "direction": "rx",
+      "reported_frequency_hz": null,
+      "hex": "92 00 C0 FF EE F9 CF 0F 21 0C 60 00 17 02 45 00 5C 02 78",
+      "capture_class": "A",
+      "confidence": "published_complete_frame_authentication_unverifiable",
+      "crc": "absent"
+    }
+  ]
+}

@@ -24175,3 +24175,5 @@ TEST(protocol_device_event_bounded_raw_storage_zero_time_counter_and_invalid_pre
 #include "corpus/pair_discovery_channel_tests.inc"
 
 #include "corpus/light_followup_tests.inc"
+
+#include "corpus/upstream_alignment_tests.inc"
