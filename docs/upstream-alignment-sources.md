@@ -12,7 +12,7 @@ The public importer additionally enforces exact reviewed register widths and fac
 
 ### Challenge duration and remaining physical qualification
 
-Source: [upstream timing implementation](https://github.com/laberning/home_io_control/blob/38ac7461548a4dae5d1636735fdbc4a12ba46fa2/src/protocol/exchange_engine.cpp).
+Source: [upstream timing implementation](https://github.com/laberning/home_io_control/blob/38ac7461548a4dae5d1636735fdbc4a12ba46fa2/components/home_io_control/exchange_engine.cpp).
 OFM `answer_us` starts at return from complete packet read and ends at successful RX rearm after the challenge answer. It includes correlation, HMAC, preparation, TX airtime and the observed TxDone; it is invalid until both TxDone and RX rearm succeed. Upstream starts at challenge acceptance, so these timestamps are not interchangeable. Neither clock measures the physical first preamble edge or interrupt edge. Critical logging remains suppressed through RX rearm. The native busy-RX regression is synthetic (S), not a hardware latency measurement.
 
 MOTO1000 still requires a controlled INFO/DEBUG A/B measurement with identical preamble and physical TX/RX observations. No timeout or preamble default changes follow from the combined settings reported in [issue 163](https://github.com/laberning/home_io_control/issues/163).
@@ -26,3 +26,7 @@ MOTO1000 still requires a controlled INFO/DEBUG A/B measurement with identical p
 [RS100 issue 187](https://github.com/laberning/home_io_control/issues/187): test the existing opt-in pairing-on-discovery-RX-channel experiment on hardware; changing LOW_POWER alone was ineffective. [LightVar issue 121](https://github.com/laberning/home_io_control/issues/121): neither changed bandwidth nor 32/48 preamble established a 2W reply. Isolated 1W enrollment remains a hardware experiment. No global PHY or default channel change is justified.
 
 [VELUX speed issue 205](https://github.com/laberning/home_io_control/issues/205): the reported 44.5/26.5/65 s durations are class C observations. The existing main-only diagnostic and tests remain available. New ETS speed presets and Stop/Ventilation/Favorite selections require the specified device-level qualification before release; current project defaults remain unchanged.
+
+### Final upstream recheck
+
+During completion upstream advanced by one commit to [ebd26e7](https://github.com/laberning/home_io_control/commit/ebd26e707762810e631595b766f4ca9ae6b06c65). The exact GitHub compare response is retained privately. Its four changed files defer valid RX/TX frame logging until after challenge transmission; no protocol capture, register, model or RF default changed. OFM already suppresses correlated challenge diagnostics, and this implementation extends suppression through successful RX rearm. The OFM SX1262 driver logs discarded captures rather than valid challenge frames; SX1276 has configuration-time logs. No additional held-frame buffer is needed for this source alignment. Physical latency remains unmeasured.
