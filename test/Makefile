@@ -214,7 +214,7 @@ check-recovery-traces:
 
 .PHONY: check-capture-build-modes
 check-capture-build-modes: $(PROTOCOL_TARGET) $(DEBUG_PROTOCOL_TARGET)
-	@for filter in recent_observed fp_high high_fp garage_ foreign_transfer typed_discovery daylight adelis_new light_raw device_event status_event empty_object remote_settle window_main_only window_issue challenge_timing pair_discovery_channel light_followup upstream_alignment solar_sensor; do \
+	@for filter in recent_observed fp_high high_fp garage_ foreign_transfer typed_discovery daylight adelis_new light_raw device_event status_event empty_object remote_settle window_main_only window_issue challenge_timing pair_discovery_channel light_followup upstream_alignment solar_sensor adelis_model adelis_original; do \
 	  ./$(PROTOCOL_TARGET) --filter $$filter || exit $$?; \
 	  ./$(DEBUG_PROTOCOL_TARGET) --filter $$filter || exit $$?; \
 	done
