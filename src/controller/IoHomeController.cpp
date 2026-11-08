@@ -2500,11 +2500,11 @@ bool IoHomeController::requestHeatingRegister(IoHomecontrolChannel *channel,uint
     if(!channel||c>=16||!channel->isPaired()||channel->is1W()||
        !IoHomeHeating::actuator(channel->getProtocolIdentity())||channel->getProtocolIdentity().ioAddress!=channel->getNodeId()||!mModule||!mModule->managementRequestsAllowed())return false;
     if(channel->selectedHeatingModel()!=IoHomeAdelis::HeatingModel::Agilia)return false;
-    if(!qualifiedHeatingName(channel,IoHomeAdelis::HeatingModel::Agilia))return false;
     if(reg==0x0110&&write&&!channel->agiliaHomeAwayEnabled()){
         mHeating[c].presenceResult=IoHomeHeating::PresenceResult::QualificationBlocked;channel->onHomeAwayCommandStatus();return false;
     }
     uint8_t data[6]{};const uint8_t length=IoHomeHeating::build(reg,write,value,data);if(!length)return false;
+    if(!requestHeatingNameQualification(channel))return false;
     auto &state=mHeating[c];
     if(state.node && (state.node!=channel->getNodeId() || state.revision!=channel->productContextRevision() ||
         state.gateway!=mOwnNodeId || std::memcmp(state.key,channel->getEncryptionKey(),16)))state.invalidate();
@@ -2638,6 +2638,9 @@ void IoHomeController::serviceHeating()
             !sampleIdentityMatches(c,state.node,state.key,state.revision))) {state.invalidate();continue;}
         if(!ch||ch->selectedHeatingModel()!=IoHomeAdelis::HeatingModel::Agilia||ch->is1W()||!ch->isPaired()||!IoHomeHeating::actuator(ch->getProtocolIdentity())||ch->getProtocolIdentity().ioAddress!=ch->getNodeId())continue;
         if(state.busy||!idleForManagedOperation()||(!debugRfLimitsBypassed()&&mHeatingNextAdmissionMs&&int32_t(millis()-mHeatingNextAdmissionMs)<0))continue;
+        if(!qualifiedHeatingName(ch,IoHomeAdelis::HeatingModel::Agilia)&&(state.pollIntervalMs||state.refreshRemaining)){
+            requestHeatingNameQualification(ch);state.nextPollMs=millis()+10000U;mHeatingNextChannel=(c+1)%16;continue;
+        }
         if((state.refreshRemaining || state.pollIntervalMs) &&
            (!state.nextPollMs || int32_t(millis()-state.nextPollMs)>=0)){
             const uint16_t reg=(!state.initialRead&&!state.refreshRemaining)?0x0115:IoHomeHeating::registers[state.pollIndex%7].reg;
@@ -7644,6 +7647,7 @@ void IoHomeController::loop()
         mReceiveConfiguration.tick(millis());
     }
     serviceObjectRead();
+    serviceAtlanticPolls();
     serviceSolarSensors();
     serviceAtlanticRegisterRead();
     serviceBatteryObjects();

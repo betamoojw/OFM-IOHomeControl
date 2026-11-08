@@ -4559,6 +4559,12 @@ bool IoHomecontrol::processCommand(const std::string iCmd, bool iDebugKo)
         else logInfoP("Usage: iohc dynamic CHANNEL status|read");
         return true;
     }
+    if(iCmd.rfind("iohc atlantic-poll ",0)==0) {
+        if(iDebugKo){logInfoP("Atlantic polling requires local console");return true;}
+        unsigned index=0,seconds=0;char extra=0;
+        if(sscanf(iCmd.c_str(),"iohc atlantic-poll %u %u %c",&index,&seconds,&extra)!=2||index<1||index>mNumChannels||seconds>65535){logInfoP("Usage: iohc atlantic-poll CHANNEL SECONDS (0=off; Adelis >=60, Calypso >=300)");return true;}
+        logInfoP("Atlantic diagnostic polling configured=%u volatile read-only opt-in",mController.configureAtlanticPoll(mChannels[index-1],seconds));return true;
+    }
     if(iCmd.rfind("iohc adelis ",0)==0||iCmd.rfind("iohc dhw ",0)==0) {
         if(iDebugKo){logInfoP("Typed Atlantic commands require local console");return true;}
         const bool adelis=iCmd.rfind("iohc adelis ",0)==0;unsigned index=0,value=0;char action[16]{},extra=0;

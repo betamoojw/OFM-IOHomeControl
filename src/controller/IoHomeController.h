@@ -649,6 +649,7 @@ public:
   bool requestSolarSensor(IoHomecontrolChannel *channel,uint16_t event);
   const IoHomeSensorSubscription::State *solarSensor(uint8_t channel)const;
   void printSolarSensor(uint8_t channel)const;
+  bool configureAtlanticPoll(IoHomecontrolChannel *channel,uint16_t seconds);
   bool startAdelisAction(IoHomecontrolChannel *channel,uint16_t reg,uint8_t value);
   bool startDhwMode(IoHomecontrolChannel *channel,uint8_t mode);
   bool startDhwTarget(IoHomecontrolChannel *channel,float celsius);
@@ -1333,6 +1334,10 @@ public:
 private:
   struct HeatingNameProof {uint32_t node=0,gateway=0,revision=0,receivedMs=0,lastAttemptMs=0;uint8_t key[16]{},systemKey[16]{},channel=0xFF;IoHomeAdelis::HeatingModel model=IoHomeAdelis::HeatingModel::Unknown;bool attempted=false;std::unique_ptr<HeatingNameProof> next;};
   std::unique_ptr<HeatingNameProof> mHeatingNames;
+  struct AtlanticPoll {uint32_t node=0,gateway=0,revision=0,dueMs=0,token=0;uint8_t key[16]{},systemKey[16]{},channel=0xFF,model=0;uint16_t seconds=0;std::unique_ptr<AtlanticPoll> next;};
+  std::unique_ptr<AtlanticPoll> mAtlanticPolls;
+  void serviceAtlanticPolls();
+  bool requestHeatingNameQualification(IoHomecontrolChannel *);
   void recordHeatingModelName(IoHomecontrolChannel *,const uint8_t *,uint8_t,uint32_t);
   struct SolarSensorNode {IoHomeSensorSubscription::State state;std::unique_ptr<SolarSensorNode> next;};
   std::unique_ptr<SolarSensorNode> mSolarSensors;

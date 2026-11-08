@@ -68,3 +68,15 @@ TEST(controller_atlantic_action_dhw_auto_or_other_tank_cannot_send_target)
         ASSERT_TRUE(lastTransmittedFrameForTest(c,tx));ASSERT_TRUE(tx.commandId!=IoHomeCommand::Execute);ASSERT_TRUE(!ch.testHasPositionFeedback());
     }
 }
+
+TEST(controller_atlantic_action_poll_is_opt_in_typed_and_identity_bound)
+{
+    for(bool dhw:{false,true}){IoHomeController c;IoHomecontrol m;IoHomecontrolChannel ch;initTypedAtlantic(c,m,ch,dhw);
+        ASSERT_TRUE(!c.configureAtlanticPoll(&ch,dhw?299:59));ASSERT_TRUE(c.configureAtlanticPoll(&ch,dhw?300:60));
+        c.loop();ASSERT_EQ(c.radio().testTransmitCount(),0U);ioHomeTestAdvanceMillis((dhw?300:60)*1000+1001);
+        IoHomeFrame tx;ASSERT_TRUE(transmitQueuedControllerFrame(c,tx));ASSERT_EQ(tx.commandId,IoHomeCommand::WritePrivate);ASSERT_EQ(tx.data[1],0x60);
+        ASSERT_EQ(c.atlanticRegisterRead().count,dhw?5:4);ASSERT_EQ(c.atlanticRegisterRead().action,IoHomeAtlanticRead::Action::Read);
+        const uint8_t other[16]={2};ch.setEncryptionKey(other);for(unsigned i=0;i<4;++i)c.loop();
+        ASSERT_TRUE(!c.atlanticRegisterRead().readbackVerified);
+    }
+}
