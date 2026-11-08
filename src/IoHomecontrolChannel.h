@@ -1,3 +1,4 @@
+#include "protocol/IoHomeAdelis.h"
 #include "protocol/IoHomeForeignActivity.h"
 #include "protocol/IoHomeProductRuntime.h"
 #include "protocol/IoHomePhysicalBounds.h"
@@ -59,7 +60,15 @@ public:
   // Callbacks from controller when radio responses arrive
   bool mHeatingConfigSeen=false,mHeatingWasEnabled=false;
   uint16_t mHeatingConfiguredPoll=0;
+  uint8_t mHeatingSelectedModel=0xFF;
   void syncHeatingConfiguration();
+  IoHomeAdelis::HeatingModel selectedHeatingModel()const {
+#ifdef ParamHTG_cModel
+    const auto model=ParamHTG_cModel;return ParamHTG_cEnabled&&model<=2?static_cast<IoHomeAdelis::HeatingModel>(model):IoHomeAdelis::HeatingModel::Unknown;
+#else
+    return IoHomeAdelis::HeatingModel::Unknown;
+#endif
+  }
   bool privateHeatingEnabled() const;
   bool agiliaHomeAwayEnabled() const;
   void onHomeAwayCommandStatus();

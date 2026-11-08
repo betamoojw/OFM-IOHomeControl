@@ -11,6 +11,7 @@ def method(signature):
 methods='\n'.join(method(s) for s in ('void IoHomecontrolChannel::syncHeatingConfiguration()', 'bool IoHomecontrolChannel::privateHeatingEnabled()', 'bool IoHomecontrolChannel::agiliaHomeAwayEnabled()', 'void IoHomecontrolChannel::onHomeAwayCommandStatus()', 'void IoHomecontrolChannel::processHomeAwayInputKo(', 'void IoHomecontrolChannel::invalidateHeatingFeedback()', 'void IoHomecontrolChannel::processHeatingInputKo(', 'void IoHomecontrolChannel::onHeatingValue('))
 harness=r'''
 #include "protocol/IoHomeHeatingRegisters.h"
+#include "protocol/IoHomeAdelis.h"
 #include <cassert>
 struct Dpt {unsigned main,sub;Dpt(unsigned a,unsigned b):main(a),sub(b){}};
 struct GroupObject {unsigned writes=0;double stored=0;unsigned main=0,sub=0;
@@ -52,10 +53,12 @@ struct Controller {IoHomeHeating::State state;unsigned requests=0,refreshes=0;ui
 };
 struct IoHomecontrolChannel {
  unsigned _channelIndex=0;uint32_t mNodeId=0x123456;bool mIs1W=false,mPaired=true;IoHomeProtocolIdentity id;Controller mController;
+ uint8_t mHeatingSelectedModel=0xFF;void invalidateProductContext(){invalidateHeatingFeedback();}
  bool mHeatingConfigSeen=false,mHeatingWasEnabled=false;uint16_t mHeatingConfiguredPoll=0;
  void syncHeatingConfiguration();bool privateHeatingEnabled()const;void invalidateHeatingFeedback();void processHeatingInputKo(uint8_t,GroupObject&);
  void onHeatingValue(uint16_t,const IoHomeHeating::Value&);
  bool agiliaHomeAwayEnabled()const;void onHomeAwayCommandStatus();void processHomeAwayInputKo(uint8_t,GroupObject&);
+ IoHomeAdelis::HeatingModel selectedHeatingModel()const{return IoHomeAdelis::HeatingModel::Agilia;}
  bool isOperational()const{return mPaired;}const auto &getProtocolIdentity()const{return id;}
  GroupObject &getKo(unsigned index){return knx.getGroupObject(600+index);}
 };

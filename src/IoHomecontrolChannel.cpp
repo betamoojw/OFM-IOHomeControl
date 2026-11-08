@@ -2971,6 +2971,8 @@ void IoHomecontrolChannel::printLastDeviceEvent()
 void IoHomecontrolChannel::syncHeatingConfiguration()
 {
 #ifdef ParamHTG_cPollSeconds
+    const uint8_t model=uint8_t(selectedHeatingModel());
+    if(mHeatingSelectedModel!=model){if(mHeatingSelectedModel!=0xFF)invalidateProductContext();mHeatingSelectedModel=model;}
     const bool enabled=privateHeatingEnabled();const uint16_t seconds=ParamHTG_cPollSeconds;
     if(!mHeatingConfigSeen || enabled!=mHeatingWasEnabled || seconds!=mHeatingConfiguredPoll){
         if(enabled || (mHeatingConfigSeen&&mHeatingWasEnabled))
@@ -2982,7 +2984,7 @@ void IoHomecontrolChannel::syncHeatingConfiguration()
 bool IoHomecontrolChannel::privateHeatingEnabled() const
 {
 #ifdef ParamHTG_cEnabled
-    return !mIs1W&&mPaired&&ParamHTG_cEnabled&&IoHomeHeating::actuator(getProtocolIdentity())&&getProtocolIdentity().ioAddress==mNodeId;
+    return selectedHeatingModel()==IoHomeAdelis::HeatingModel::Agilia&&!mIs1W&&mPaired&&ParamHTG_cEnabled&&IoHomeHeating::actuator(getProtocolIdentity())&&getProtocolIdentity().ioAddress==mNodeId;
 #else
     return false;
 #endif

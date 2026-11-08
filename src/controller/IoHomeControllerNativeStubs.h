@@ -1,3 +1,4 @@
+#include "../protocol/IoHomeAdelis.h"
 #include "../protocol/IoHomeForeignActivity.h"
 #pragma once
 #include "../protocol/IoHomeHeatingRegisters.h"
@@ -472,6 +473,9 @@ public:
        mProtocolIdentity.manufacturerId!=uint8_t(IoHomeManufacturer::Velux)||mProtocolIdentity.profile!=4||mProtocolIdentity.subProfile>1))return false;
     mWindowMainOnly=enabled;return true;
   }
+  IoHomeAdelis::HeatingModel selectedHeatingModel()const{return mSelectedHeatingModel;}
+  void setHeatingModelForTest(IoHomeAdelis::HeatingModel model){if(model!=mSelectedHeatingModel)invalidateProductContext();mSelectedHeatingModel=model;}
+  IoHomeAdelis::HeatingModel mSelectedHeatingModel=IoHomeAdelis::HeatingModel::Unknown;
   bool isMoving()const{return mStatusMoving;}
   bool windowMainOnly() const {
     const auto *p=getEffectiveProfileDescriptor();

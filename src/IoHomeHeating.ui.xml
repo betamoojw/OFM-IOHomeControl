@@ -4,6 +4,9 @@
 <ParameterSeparator Id="%AID%_PS-nnn" Text="Private Heizregister: Atlantic 52/1"/>
 <ParameterRefRef RefId="%AID%_UP-%TT%%PRODUCT_CC%001_R-%TT%%PRODUCT_CC%00101" HelpContext="IOHC-Geraetetyp"/>
 <choose ParamRefId="%AID%_UP-%TT%%PRODUCT_CC%001_R-%TT%%PRODUCT_CC%00101"><when test="1">
+<ParameterRefRef RefId="%AID%_UP-%TT%%PRODUCT_CC%006_R-%TT%%PRODUCT_CC%00601"/>
+<choose ParamRefId="%AID%_UP-%TT%%PRODUCT_CC%006_R-%TT%%PRODUCT_CC%00601"><when test="2"><ParameterSeparator Id="%AID%_PS-nnn" Text="Adelis: lokale modellgebundene Diagnose. Keine AGILIA- oder Fenster-KOs freigegeben." UIHint="Information"/></when></choose>
+<choose ParamRefId="%AID%_UP-%TT%%PRODUCT_CC%006_R-%TT%%PRODUCT_CC%00601"><when test="1">
 <ParameterRefRef RefId="%AID%_UP-%TT%%PRODUCT_CC%003_R-%TT%%PRODUCT_CC%00301" HelpContext="IOHC-Geraetetyp"/>
 <ParameterRefRef RefId="%AID%_UP-%TT%%PRODUCT_CC%002_R-%TT%%PRODUCT_CC%00201" HelpContext="IOHC-Geraetetyp"/>
 <ParameterSeparator Id="%AID%_PS-nnn" Text="Werte bleiben bis zur bestätigten Abfrage unbekannt. Gültigkeitsmaske beachten. Schreiben wird erst nach GET-Rücklesen als beobachteter Sollwert gemeldet. Funkbudget begrenzt Abfragen." UIHint="Information"/>
@@ -22,4 +25,4 @@
 <ComObjectRefRef RefId="%AID%_O-%TT%%PRODUCT_CC%007_R-%TT%%PRODUCT_CC%00701"/>
 <ComObjectRefRef RefId="%AID%_O-%TT%%PRODUCT_CC%009_R-%TT%%PRODUCT_CC%00901"/>
 <choose ParamRefId="%AID%_UP-%TT%%PRODUCT_CC%002_R-%TT%%PRODUCT_CC%00201"><when test="1"><ComObjectRefRef RefId="%AID%_O-%TT%%PRODUCT_CC%008_R-%TT%%PRODUCT_CC%00801"/></when></choose>
-</when></choose></when></choose></Dynamic></KNX>
+</when></choose></when></choose></when></choose></Dynamic></KNX>
