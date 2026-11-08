@@ -1,5 +1,6 @@
 #pragma once
 #include "IoHomeLocalSensorEvent.h"
+#include "IoHomeSensorPoll.h"
 #include <cstring>
 
 // https://github.com/laberning/home_io_control/commit/a0d103591f3d340975a40745b894fbfbb85f9237
@@ -25,6 +26,7 @@ struct State {
     uint32_t node=0,gateway=0,revision=0,token=0,startedMs=0,lastStartMs[2]{};
     uint8_t key[16]{},systemKey[16]{},channel=0xFF;uint16_t event=0;
     bool enabled=false,pending=false,started[2]{};
+    IoHomeSensorPoll poll;
     uint8_t outcome=0,lastReplyLength=0,lastReply[10]{};Sample sun,battery;
 };
 inline bool decode(uint16_t event,const IoHomeFrame &frame,Sample &sample,uint8_t frequency,uint32_t rx,uint32_t verified) {

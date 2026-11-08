@@ -2,7 +2,7 @@ static void qualifySolarSensorForTest(IoHomecontrolChannel &ch)
 {
     IoHomeProtocolIdentity id;id.valid=true;id.ioAddress=ch.getNodeId();id.profile=2;id.manufacturerId=2;id.nodeClass=IoHomeNodeClass::Actuator;
     ch.onProtocolIdentity(ch.getNodeId(),id);
-    const uint8_t signature[]={'5','1','6','3','3','4','1','E','0','2',4,0,0xFF,0xFF};
+    const uint8_t signature[]={'5','1','6','3','3','4','1','E','0','2'};
     ch.onPostPairEnrichmentResponse(IoHomeCommand::GetGeneralInfo1Response,signature,sizeof(signature));
 }
 TEST(protocol_solar_sensor_originals_decode_without_units_or_battery_invention)
@@ -38,7 +38,8 @@ TEST(controller_solar_sensor_direct_reply_needs_own_outbound_proof_and_exact_con
         const auto before=c.radio().testTransmitCount();ASSERT_TRUE(queueControllerResponse(c,reply));
         const auto *state=c.solarSensor(0);
         if(variant==0){ASSERT_TRUE(state&&state->sun.valid);ASSERT_TRUE(state->sun.raw==183||state->sun.raw==744);ASSERT_EQ(state->sun.receivedMs,ioHomeTestMillis());
-            const auto proofTime=state->sun.verifiedMs;ASSERT_TRUE(queueControllerResponse(c,reply));ASSERT_EQ(c.solarSensor(0)->sun.verifiedMs,proofTime);}
+            const auto proofTime=state->sun.verifiedMs;uint8_t wire[32];const auto length=serializeFrameForTest(reply,wire,sizeof(wire));
+            c.testSetRxScanFrequency(IOHC_FREQ_2);c.radio().testQueueReceivedPacket(wire,length);c.loop();ASSERT_EQ(c.solarSensor(0)->sun.verifiedMs,proofTime);}
         else ASSERT_TRUE(!state||!state->sun.valid);
         ASSERT_EQ(c.radio().testTransmitCount(),before);ASSERT_TRUE(!ch.lastDeviceEvent().valid&&!ch.lastLocalSensorSample().valid&&!ch.testHasPositionFeedback()&&!ch.testHasStatusUpdate());
     }
@@ -52,4 +53,29 @@ TEST(controller_solar_sensor_requires_explicit_model_opt_in_and_no_generic_subsc
     ASSERT_TRUE(!c.requestSolarSensor(&ch,0x100A));ASSERT_TRUE(!c.sendCommand(ch.getNodeId(),key,IoHomeCommand::SubscribeEvent,1));
     ch.onStatusUpdate(true);ASSERT_TRUE(!c.requestSolarSensor(&ch,0x2005));ch.onStatusUpdate(false);
     ASSERT_TRUE(c.configureSolarSensor(&ch,false));ASSERT_TRUE(!c.requestSolarSensor(&ch,0x2001));ASSERT_EQ(c.radio().testTransmitCount(),0U);
+}
+
+TEST(protocol_solar_sensor_poll_is_bounded_staggered_and_retry_is_delayed)
+{
+    IoHomeSensorPoll p;ASSERT_TRUE(!p.configure(0,3,899,1,0));ASSERT_TRUE(p.configure(UINT32_MAX-1000,3,900,1,0));
+    const uint32_t due=p.dueMs;ASSERT_EQ(p.due(due-1),0);ASSERT_EQ(p.due(due),0x2005);
+    for(unsigned cycle=0;cycle<3;++cycle){
+        const uint32_t now=p.dueMs;ASSERT_EQ(p.due(now),0x2005);p.waiting=true;p.finish(now,0x2005,false);
+        ASSERT_EQ(p.due(now+59999),0);ASSERT_EQ(p.due(now+60000),0x2005);p.waiting=true;p.finish(now+60000,0x2005,false);
+        ASSERT_EQ(p.misses[0],cycle+1);ASSERT_EQ(p.due(p.dueMs),0x2001);p.waiting=true;p.finish(p.dueMs,0x2001,true);
+        ASSERT_EQ(p.misses[1],0);ASSERT_TRUE(uint32_t(p.dueMs-(now+61000))>=900000U);
+    }
+    ASSERT_TRUE(p.configure(0,0,0,1,0));ASSERT_EQ(p.due(UINT32_MAX),0);
+}
+TEST(controller_solar_sensor_poll_is_explicit_and_reuses_existing_exchange_queue)
+{
+    const uint8_t key[16]={1};IoHomeController c;IoHomecontrol m;IoHomecontrolChannel ch;
+    initPaired2WControllerForTest(c,m,ch,0xA1B2C3,0x24635F,key);qualifySolarSensorForTest(ch);
+    ASSERT_TRUE(!c.configureSolarPoll(&ch,3,900));ASSERT_TRUE(c.configureSolarSensor(&ch,true));
+    ASSERT_TRUE(c.configureSolarPoll(&ch,3,900));const auto due=c.solarSensor(0)->poll.dueMs;
+    ioHomeTestSetMillis(due-100);c.loop();ASSERT_EQ(c.radio().testTransmitCount(),0U);
+    ch.onStatusUpdate(true);ioHomeTestSetMillis(due);c.loop();
+    ASSERT_EQ(c.radio().testTransmitCount(),0U);
+    ch.onStatusUpdate(false);IoHomeFrame tx;ASSERT_TRUE(transmitQueuedControllerFrame(c,tx));ASSERT_EQ(tx.commandId,IoHomeCommand::SubscribeEvent);
+    ASSERT_TRUE(c.solarSensor(0)->pending);ASSERT_TRUE(!c.requestSolarSensor(&ch,0x2001));
 }

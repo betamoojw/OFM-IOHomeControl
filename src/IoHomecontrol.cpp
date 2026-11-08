@@ -4559,6 +4559,13 @@ bool IoHomecontrol::processCommand(const std::string iCmd, bool iDebugKo)
         else logInfoP("Usage: iohc dynamic CHANNEL status|read");
         return true;
     }
+    if(iCmd.rfind("iohc solar-poll ",0)==0) {
+        if(iDebugKo){logInfoP("Solar polling requires local console");return true;}
+        unsigned index=0,mask=0,seconds=0;char extra=0;
+        if(sscanf(iCmd.c_str(),"iohc solar-poll %u %u %u %c",&index,&mask,&seconds,&extra)!=3||index<1||index>mNumChannels||mask>3||seconds>86400){
+            logInfoP("Usage: iohc solar-poll CHANNEL MASK SECONDS (mask 1=sun,2=battery,3=both,0=off; minimum 900s)");return true;}
+        logInfoP("Solar polling configured=%u volatile opt-in",mController.configureSolarPoll(mChannels[index-1],mask,seconds));return true;
+    }
     if(iCmd.rfind("iohc solar ",0)==0) {
         if(iDebugKo){logInfoP("Solar sensor writes require local console");return true;}
         unsigned index=0;char action[16]{},confirm[24]{};char extra=0;

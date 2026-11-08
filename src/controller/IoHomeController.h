@@ -645,6 +645,7 @@ public:
   bool requestHomeAway(IoHomecontrolChannel *channel,bool home);
   bool cancelHomeAway(uint8_t channel);
   bool configureSolarSensor(IoHomecontrolChannel *channel,bool enabled);
+  bool configureSolarPoll(IoHomecontrolChannel *channel,uint8_t mask,uint32_t seconds);
   bool requestSolarSensor(IoHomecontrolChannel *channel,uint16_t event);
   const IoHomeSensorSubscription::State *solarSensor(uint8_t channel)const;
   void printSolarSensor(uint8_t channel)const;
@@ -1329,6 +1330,7 @@ private:
   SolarSensorNode *findSolarSensor(uint8_t channel)const;
   bool solarIdentityMatches(const IoHomeSensorSubscription::State &)const;
   bool solarEntryMatches(const IoHomeQueueEntry &)const;
+  bool queueSolarSensor(IoHomecontrolChannel *,uint16_t,bool retryAllowance);
   void serviceSolarSensors();
   void finishSolarSensor(const IoHomeQueueEntry &,IoHomeCommandExchangeResult);
   std::unique_ptr<ChallengeTiming[]> mChallengeTimings;
