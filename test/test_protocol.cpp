@@ -11720,7 +11720,7 @@ TEST(controller_cozy_temperature_preserves_le16_queue_value)
         initPaired2WControllerForTest(lController, lModule, lChannel,
                                       lRemoteNodeId, lDeviceNodeId, lKey);
         IoHomeProtocolIdentity heating;heating.valid=true;heating.manufacturerId=12;heating.profile=52;heating.subProfile=1;
-        lChannel.onProtocolIdentity(lDeviceNodeId,heating);
+        lChannel.onProtocolIdentity(lDeviceNodeId,heating);lChannel.setHeatingModelForTest(IoHomeAdelis::HeatingModel::Agilia);lController.testSeedAgiliaName(&lChannel);
         ASSERT_TRUE(lController.sendCommand(lDeviceNodeId, lKey,
                                             IoHomeCommand::WritePrivate, 0x03,
                                             lCase.tenths));
@@ -21869,6 +21869,7 @@ static void initHeatingController(IoHomeController &c,IoHomecontrol &m,IoHomecon
     initPaired2WControllerForTest(c,m,ch,0x60F823,0xB6BDFC,key);
     IoHomeProtocolIdentity id;id.valid=true;id.fullMetadata=true;id.manufacturerId=12;id.profile=52;id.subProfile=1;
     id.powerSaveMode=IoHomePowerMode::AlwaysAlive;id.ioAddress=0xB6BDFC;ch.onProtocolIdentity(0xB6BDFC,id);
+    ch.setHeatingModelForTest(IoHomeAdelis::HeatingModel::Agilia);c.testSeedAgiliaName(&ch);
 }
 static bool authenticateHeatingRequest(IoHomeController &c)
 {
@@ -21879,7 +21880,7 @@ static bool authenticateHeatingRequest(IoHomeController &c)
 TEST(controller_heating_reads_require_authenticated_exact_echo)
 {
     IoHomeController c;IoHomecontrol m;IoHomecontrolChannel ch;initHeatingController(c,m,ch);
-    const uint8_t globalKey[16]={0x77};c.setSystemKey(globalKey);
+    const uint8_t globalKey[16]={0x77};c.setSystemKey(globalKey);c.testSeedAgiliaName(&ch);
     ASSERT_TRUE(c.requestHeatingRegister(&ch,0x0115));ASSERT_TRUE(!c.requestHeatingRegister(&ch,0x0103));
     IoHomeFrame request,response;ASSERT_TRUE(transmitQueuedControllerFrame(c,request));
     ASSERT_EQ(request.commandId,IoHomeCommand::WritePrivate);ASSERT_EQ(request.dataLen,4);
@@ -22115,8 +22116,8 @@ TEST(controller_atlantic_full_silence_never_assigns_remote_or_sends_config)
 TEST(controller_heating_two_device_keys_and_existing_velux_are_isolated)
 {
     IoHomeController c;IoHomecontrol m;IoHomecontrolChannel a,b,velux;initHeatingController(c,m,a);
-    const uint8_t other[16]={0x43},global[16]={0x77};c.setSystemKey(global);
-    m.testSetChannel(1,&b);b.setNodeId(0x112233);b.setEncryptionKey(other);b.onProtocolIdentity(0x112233,a.getProtocolIdentity());
+    const uint8_t other[16]={0x43},global[16]={0x77};c.setSystemKey(global);c.testSeedAgiliaName(&a);
+    m.testSetChannel(1,&b);b.setNodeId(0x112233);b.setEncryptionKey(other);b.onProtocolIdentity(0x112233,a.getProtocolIdentity());b.setHeatingModelForTest(IoHomeAdelis::HeatingModel::Agilia);c.testSeedAgiliaName(&b);
     m.testSetChannel(2,&velux);velux.setNodeId(0x654321);velux.setEncryptionKey(global);
     ASSERT_TRUE(c.requestHeatingRegister(&a,0x0115));ASSERT_TRUE(c.requestHeatingRegister(&b,0x0115));
     for(unsigned channel=0;channel<2;++channel){
@@ -22140,7 +22141,7 @@ TEST(controller_heating_polling_is_opt_in_and_quota_cannot_use_bench_bypass)
     IoHomeController c;IoHomecontrol m;IoHomecontrolChannel ch;initHeatingController(c,m,ch);
     ioHomeTestAdvanceMillis(300000);c.loop();ASSERT_EQ(c.radio().testTransmitCount(),0U);
     ASSERT_TRUE(!c.configureHeatingPoll(0,59));ASSERT_TRUE(!c.configureHeatingPoll(16,300));
-    ASSERT_TRUE(c.configureHeatingPoll(0,60));c.testChargeDuty(IOHC_FREQ_2,3600);c.testSimulationUnlimited();
+    c.testSeedAgiliaName(&ch);ASSERT_TRUE(c.configureHeatingPoll(0,60));c.testChargeDuty(IOHC_FREQ_2,3600);c.testSimulationUnlimited();
     ioHomeTestAdvanceMillis(1001);c.loop();ASSERT_EQ(c.radio().testTransmitCount(),0U);
     ASSERT_EQ(c.heatingState(0).result,IoHomeHeating::State::Result::QuotaDenied);
     ASSERT_TRUE(!c.requestHeatingRegister(&ch,0x0102));ASSERT_EQ(c.radio().testTransmitCount(),0U);
@@ -22171,8 +22172,8 @@ TEST(controller_heating_scheduler_serves_channels_fairly_without_catchup_bursts)
 {
     IoHomeController c;IoHomecontrol m;IoHomecontrolChannel a,b,d;initHeatingController(c,m,a);
     const uint8_t key[16]={0x42};
-    m.testSetChannel(1,&b);b.setNodeId(0x112233);b.setEncryptionKey(key);b.onProtocolIdentity(0x112233,a.getProtocolIdentity());
-    m.testSetChannel(2,&d);d.setNodeId(0x445566);d.setEncryptionKey(key);d.onProtocolIdentity(0x445566,a.getProtocolIdentity());
+    m.testSetChannel(1,&b);b.setNodeId(0x112233);b.setEncryptionKey(key);b.onProtocolIdentity(0x112233,a.getProtocolIdentity());b.setHeatingModelForTest(IoHomeAdelis::HeatingModel::Agilia);c.testSeedAgiliaName(&b);
+    m.testSetChannel(2,&d);d.setNodeId(0x445566);d.setEncryptionKey(key);d.onProtocolIdentity(0x445566,a.getProtocolIdentity());d.setHeatingModelForTest(IoHomeAdelis::HeatingModel::Agilia);c.testSeedAgiliaName(&d);
     for(uint8_t i=0;i<3;++i)ASSERT_TRUE(c.configureHeatingPoll(i,60));
     ioHomeTestAdvanceMillis(1001);
     for(uint32_t peer:{0xB6BDFCU,0x112233U,0x445566U}){
@@ -22581,7 +22582,7 @@ TEST(controller_home_away_model_qualification_busy_quota_and_identity_guards)
         buildSimpleResponseFrame(reply,0x60F823,0xB6BDFC,IoHomeCommand::WritePrivateResponse,tx.data,5);
         if(variant==9)reply.data[4]=0;if(variant==10)reply.setSrcNode(0x112233);if(variant==11)reply.dataLen=6;
         ASSERT_TRUE(queueControllerResponse(c,reply));
-        ASSERT_EQ(c.heatingState(0).presenceResult==R::AcknowledgedEffectUnknown,variant==5);
+        ASSERT_TRUE(c.heatingState(0).presenceResult!=R::AcknowledgedEffectUnknown);
         if(variant!=5)ASSERT_TRUE(!c.heatingState(0).values[IoHomeHeating::index(0x0110)].observed);
         if(variant==3)ASSERT_EQ(c.heatingState(0).presenceResult,R::Cancelled);
     }
@@ -22636,7 +22637,7 @@ TEST(controller_home_away_two_channel_keys_are_isolated_and_old_acks_cannot_comp
 {
     IoHomeController c;IoHomecontrol m;IoHomecontrolChannel first,second;initHeatingController(c,m,first);first.homeAwayQualified=true;
     const uint8_t other[16]={0x43};m.testSetChannel(1,&second);second.setNodeId(0x112233);second.setEncryptionKey(other);
-    auto identity=first.getProtocolIdentity();identity.ioAddress=0x112233;second.onProtocolIdentity(0x112233,identity);second.homeAwayQualified=true;
+    auto identity=first.getProtocolIdentity();identity.ioAddress=0x112233;second.onProtocolIdentity(0x112233,identity);second.setHeatingModelForTest(IoHomeAdelis::HeatingModel::Agilia);c.testSeedAgiliaName(&second);second.homeAwayQualified=true;
     ASSERT_TRUE(c.requestHomeAway(&first,true));ASSERT_TRUE(c.requestHomeAway(&second,false));
     for(unsigned channel=0;channel<2;++channel){
         IoHomeFrame request,response,auth;ASSERT_TRUE(transmitQueuedControllerFrame(c,request));
@@ -24183,3 +24184,5 @@ TEST(protocol_device_event_bounded_raw_storage_zero_time_counter_and_invalid_pre
 #include "corpus/adelis_model_tests.inc"
 
 #include "corpus/dhw_codec_tests.inc"
+
+#include "corpus/atlantic_action_tests.inc"

@@ -4559,6 +4559,21 @@ bool IoHomecontrol::processCommand(const std::string iCmd, bool iDebugKo)
         else logInfoP("Usage: iohc dynamic CHANNEL status|read");
         return true;
     }
+    if(iCmd.rfind("iohc adelis ",0)==0||iCmd.rfind("iohc dhw ",0)==0) {
+        if(iDebugKo){logInfoP("Typed Atlantic commands require local console");return true;}
+        const bool adelis=iCmd.rfind("iohc adelis ",0)==0;unsigned index=0,value=0;char action[16]{},extra=0;
+        const int fields=sscanf(iCmd.c_str(),adelis?"iohc adelis %u %15s %u %c":"iohc dhw %u %15s %u %c",&index,action,&value,&extra);
+        if(index<1||index>mNumChannels||fields<2||fields>3){logInfoP("Usage: iohc adelis|dhw CHANNEL status|mode VALUE|temporary VALUE (Adelis)|target STEP (DHW)");return true;}
+        auto *ch=mChannels[index-1];if(!ch)return true;
+        if(fields==2&&!std::strcmp(action,"status")){if(mController.atlanticRegisterRead().channel!=index-1)logInfoP("No Atlantic job for requested channel");else mController.printAtlanticRegisterRead();return true;}
+        bool queued=false;if(fields==3&&value<=255){
+            if(adelis&&!std::strcmp(action,"mode"))queued=mController.startAdelisAction(ch,0x136,value);
+            else if(adelis&&!std::strcmp(action,"temporary"))queued=mController.startAdelisAction(ch,0x13E,value);
+            else if(!adelis&&!std::strcmp(action,"mode"))queued=mController.startDhwMode(ch,value);
+            else if(!adelis&&!std::strcmp(action,"target"))queued=mController.startDhwTarget(ch,float(value));
+        }
+        logInfoP("Typed Atlantic state-changing job queued=%u; physical effect unknown until independent observation",queued);return true;
+    }
     if(iCmd.rfind("iohc solar-poll ",0)==0) {
         if(iDebugKo){logInfoP("Solar polling requires local console");return true;}
         unsigned index=0,mask=0,seconds=0;char extra=0;

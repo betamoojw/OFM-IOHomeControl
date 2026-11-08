@@ -24,7 +24,7 @@ TEST(protocol_atlantic_read_golden_values_preserve_unknown_suffix_and_candidates
         if(calypso&&f.reg==0x17){ASSERT_EQ(s.length,6);ASSERT_EQ(v.scaled,expectedTemps[temps++]);ASSERT_EQ(s.data[2],0);}
         if(calypso&&f.reg==4){if(!energies++)firstEnergy=v.scaled;lastEnergy=v.scaled;}
         if(!calypso&&f.reg==0x119)ASSERT_TRUE(isAdelisClassicName(s));
-        if(!calypso&&f.reg==0x115){ASSERT_TRUE(v.candidate);
+        if(!calypso&&f.reg==0x115){ASSERT_TRUE(v.known&&!v.candidate);
             if(s.data[0]==0xE9&&s.data[1]==7)ASSERT_EQ(v.scaled,2025);
             else {ASSERT_EQ(s.data[0],0x66);ASSERT_EQ(s.data[1],8);ASSERT_EQ(v.scaled,2150);}}
         if(s.result==Result::Empty){++empty;ASSERT_TRUE(!v.known);}
@@ -112,8 +112,8 @@ TEST(protocol_adelis_new_registers_remain_distinct_from_other_models)
     unsigned setpoint=0,mirror=0,active=0,window=0;
     for(const auto &row:AtlanticRegisterCaptures::frames)if(row.wire[5]==0xBB) {
         Sample s;ASSERT_TRUE(reply(row.reg,row.wire+9,row.length-9,s));
-        if(row.reg==0x103&&s.length==2&&s.data[0]==0xC3){++setpoint;ASSERT_TRUE(!decode(Model::AdelisClassic,s).known);}
-        if(row.reg==0x138&&s.length==2&&s.data[0]==0xC3){++mirror;ASSERT_TRUE(!decode(Model::AdelisClassic,s).known);}
+        if(row.reg==0x103&&s.length==2&&s.data[0]==0xC3){++setpoint;ASSERT_TRUE(decode(Model::AdelisClassic,s).known);}
+        if(row.reg==0x138&&s.length==2&&s.data[0]==0xC3){++mirror;ASSERT_TRUE(decode(Model::AdelisClassic,s).known);}
         if(row.reg==0x137){++active;ASSERT_TRUE(!decode(Model::AdelisClassic,s).known);}
         if(row.reg==0x106){++window;ASSERT_TRUE(!decode(Model::AdelisClassic,s).known);}
         ASSERT_TRUE(!decode(Model::Calypso,s).known);

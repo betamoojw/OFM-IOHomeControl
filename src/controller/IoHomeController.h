@@ -649,6 +649,13 @@ public:
   bool requestSolarSensor(IoHomecontrolChannel *channel,uint16_t event);
   const IoHomeSensorSubscription::State *solarSensor(uint8_t channel)const;
   void printSolarSensor(uint8_t channel)const;
+  bool startAdelisAction(IoHomecontrolChannel *channel,uint16_t reg,uint8_t value);
+  bool startDhwMode(IoHomecontrolChannel *channel,uint8_t mode);
+  bool startDhwTarget(IoHomecontrolChannel *channel,float celsius);
+  bool qualifiedHeatingName(IoHomecontrolChannel *channel,IoHomeAdelis::HeatingModel model)const;
+#ifdef TEST_NATIVE
+  void testSeedAgiliaName(IoHomecontrolChannel *channel);
+#endif
   bool startAtlanticRegisterRead(IoHomecontrolChannel *channel,uint8_t family,uint8_t first,uint8_t count=1,IoHomeAtlanticRead::Model model=IoHomeAtlanticRead::Model::Raw);
   bool cancelAtlanticRegisterRead(uint32_t token);
   const IoHomeAtlanticRead::State &atlanticRegisterRead() const {
@@ -1324,6 +1331,9 @@ public:
   const Radio &radio() const;
 
 private:
+  struct HeatingNameProof {uint32_t node=0,gateway=0,revision=0,receivedMs=0,lastAttemptMs=0;uint8_t key[16]{},systemKey[16]{},channel=0xFF;IoHomeAdelis::HeatingModel model=IoHomeAdelis::HeatingModel::Unknown;bool attempted=false;std::unique_ptr<HeatingNameProof> next;};
+  std::unique_ptr<HeatingNameProof> mHeatingNames;
+  void recordHeatingModelName(IoHomecontrolChannel *,const uint8_t *,uint8_t,uint32_t);
   struct SolarSensorNode {IoHomeSensorSubscription::State state;std::unique_ptr<SolarSensorNode> next;};
   std::unique_ptr<SolarSensorNode> mSolarSensors;
   uint32_t mNextSolarToken=0;
@@ -1485,6 +1495,7 @@ private:
   uint32_t mObjectReadReadyMs=0;
   void serviceObjectRead();
   void serviceAtlanticRegisterRead();
+  bool decodeAtlanticJobReply(const IoHomeQueueEntry &,IoHomeAtlanticRead::Sample &)const;
   void finishAtlanticRegisterRead(const IoHomeQueueEntry &,IoHomeCommandExchangeResult);
   bool atlanticRegisterContextMatches(const IoHomeQueueEntry &) const;
   std::unique_ptr<IoHomeAtlanticRead::State> mRegisterRead;

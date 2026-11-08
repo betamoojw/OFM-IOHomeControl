@@ -2375,11 +2375,16 @@ bool IoHomeController::startAtlanticRegisterRead(IoHomecontrolChannel *channel,u
     const auto &id=channel->getProtocolIdentity();
     if(!id.valid||id.ioAddress!=channel->getNodeId()||id.manufacturerId!=0x0C||family>1)return false;
     if(family==0 ? (id.profile!=0x33||id.subProfile!=0) : !IoHomeHeating::actuator(id))return false;
-    if(model==IoHomeAtlanticRead::Model::AdelisClassic||(model==IoHomeAtlanticRead::Model::Calypso&&family!=0))return false;
+    if(model==IoHomeAtlanticRead::Model::AdelisClassic&&(!qualifiedHeatingName(channel,IoHomeAdelis::HeatingModel::Adelis)||family!=1))return false;
+    if(model==IoHomeAtlanticRead::Model::Calypso&&family!=0)return false;
     std::unique_ptr<IoHomeAtlanticRead::State> state(new(std::nothrow) IoHomeAtlanticRead::State());
     if(!state)return false;
+    if(model==IoHomeAtlanticRead::Model::Calypso&&mRegisterRead&&mRegisterRead->model==model&&mRegisterReadPeer==channel->getNodeId()&&
+       mRegisterReadGateway==mOwnNodeId&&!std::memcmp(mRegisterReadSystemKey,mSystemKey,16)&&sampleIdentityMatches(c,mRegisterReadPeer,mRegisterReadKey,mRegisterReadRevision)){
+        state->dhw=mRegisterRead->dhw;state->dhw.modeValid=false;state->dhw.targetValid=false;
+    }
     mRegisterRead=std::move(state);mRegisterRead->active=true;mRegisterRead->channel=c;mRegisterRead->count=count;mRegisterRead->model=model;
-    mRegisterRead->token=++mNextRegisterReadToken;
+    mRegisterRead->token=++mNextRegisterReadToken;mRegisterRead->modelSelection=uint8_t(channel->selectedHeatingModel());
     for(uint8_t i=0;i<count;++i)mRegisterRead->samples[i].reg=uint16_t(family)<<8|(first+i);
     mRegisterReadPeer=channel->getNodeId();mRegisterReadRevision=channel->productContextRevision();mRegisterReadGateway=mOwnNodeId;
     std::memcpy(mRegisterReadKey,channel->getEncryptionKey(),16);std::memcpy(mRegisterReadSystemKey,mSystemKey,16);
@@ -2390,7 +2395,8 @@ bool IoHomeController::atlanticRegisterContextMatches(const IoHomeQueueEntry &e)
 {
     return e.registerReadToken&&registerReadActive()&&e.registerReadToken==mRegisterRead->token&&mRegisterReadGateway==mOwnNodeId&&
         !std::memcmp(mRegisterReadSystemKey,mSystemKey,16)&&e.sourceChannelIndex==mRegisterRead->channel&&mRegisterReadPeer==e.destNodeId&&
-        sampleIdentityMatches(mRegisterRead->channel,mRegisterReadPeer,mRegisterReadKey,mRegisterReadRevision);
+        sampleIdentityMatches(mRegisterRead->channel,mRegisterReadPeer,mRegisterReadKey,mRegisterReadRevision)&&
+        mModule->getChannel(mRegisterRead->channel)->selectedHeatingModel()==static_cast<IoHomeAdelis::HeatingModel>(mRegisterRead->modelSelection);
 }
 bool IoHomeController::cancelAtlanticRegisterRead(uint32_t token)
 {
@@ -2402,17 +2408,36 @@ void IoHomeController::serviceAtlanticRegisterRead()
     using R=IoHomeAtlanticRead::Result;
     if(!registerReadActive())return;
     auto &sample=mRegisterRead->samples[mRegisterRead->completed];const uint32_t now=millis();
-    if(mRegisterReadGateway!=mOwnNodeId||std::memcmp(mRegisterReadSystemKey,mSystemKey,16)||!sampleIdentityMatches(mRegisterRead->channel,mRegisterReadPeer,mRegisterReadKey,mRegisterReadRevision)) {
-        sample.result=R::IdentityChanged;mRegisterRead->active=false;return;
+    if(mRegisterReadGateway!=mOwnNodeId||std::memcmp(mRegisterReadSystemKey,mSystemKey,16)||!sampleIdentityMatches(mRegisterRead->channel,mRegisterReadPeer,mRegisterReadKey,mRegisterReadRevision)||
+       uint8_t(mModule->getChannel(mRegisterRead->channel)->selectedHeatingModel())!=mRegisterRead->modelSelection) {
+        sample.result=R::IdentityChanged;mRegisterRead->readbackVerified=false;mRegisterRead->dhw={};mRegisterRead->active=false;return;
     }
     if(uint32_t(now-mRegisterReadStarted)>=120000){sample.result=R::NoReply;mRegisterRead->active=false;return;}
     if(mRegisterReadPending||mState!=ControllerState::Idle||!queueEmpty()||mCurrentCmd.active||
        int32_t(now-mRegisterReadNext)<0||!mModule||!mModule->managementRequestsAllowed()||mPassiveMode||mGatewayMode||
        mOneWayKeyReceiveActive||mKeyExtractArmed||mNetworkScanActive||mObjectRead.active()||mReceiveConfiguration.active())return;
     IoHomeQueueEntry e{};e.destNodeId=mRegisterReadPeer;e.encKey=mRegisterReadKey;e.productContextRevision=mRegisterReadRevision;
-    e.command=IoHomeCommand::WritePrivate;e.sourceChannelIndex=mRegisterRead->channel;e.managementRead=true;e.twoWayTxFreqIdx=frequencyIndexForHz(kNormal2WTxFreqHz);
+    e.command=IoHomeCommand::WritePrivate;e.param2=e.param3=0xFF;e.sourceChannelIndex=mRegisterRead->channel;e.managementRead=true;e.twoWayTxFreqIdx=frequencyIndexForHz(kNormal2WTxFreqHz);
     std::memcpy(e.managementKey,mRegisterReadKey,16);e.registerReadToken=mRegisterRead->token;e.heatingLength=4;
-    IoHomeAtlanticRead::build(sample.reg>>8,sample.reg,e.heatingData);e.maxAttempts=1;e.active=true;e.background=true;
+    using A=IoHomeAtlanticRead::Action;auto &job=*mRegisterRead;
+    if(job.model==IoHomeAtlanticRead::Model::AdelisClassic&&job.completed&&
+       !IoHomeAdelis::modelName(IoHomeAdelis::HeatingModel::Adelis,job.samples[0].data,job.samples[0].length)){sample.result=R::Rejected;job.active=false;return;}
+    if(job.completed==job.writeIndex){
+        if(job.action==A::AdelisWrite){
+            const auto &name=job.samples[0];
+            if(!IoHomeAdelis::modelName(IoHomeAdelis::HeatingModel::Adelis,name.data,name.length)||
+               mModule->getChannel(job.channel)->selectedHeatingModel()!=IoHomeAdelis::HeatingModel::Adelis){sample.result=R::Rejected;job.active=false;return;}
+            e.heatingLength=IoHomeAdelis::write(sample.reg,job.desired,e.heatingData);if(!e.heatingLength){job.active=false;return;}
+        } else if(job.action==A::DhwMode)e.heatingLength=IoHomeDhwCodec::modeWrite(job.desired,e.heatingData);
+        else if(job.action==A::DhwTarget){
+            const auto &volume=job.samples[0],&mode=job.samples[1];
+            if(volume.length!=2||volume.data[0]!=0||volume.data[1]!=200||mode.length!=1||mode.data[0]<1||mode.data[0]>2){sample.result=R::Rejected;job.active=false;return;}
+            e.command=IoHomeCommand::Execute;e.param=0xFF;e.heatingLength=6;
+            if(!IoHomeDhwCodec::executePayload(job.targetRaw,mModule->getChannel(job.channel)->getConfigured2WAcei(),e.heatingData)){job.active=false;return;}
+        }
+    } else if(sample.reg==0xFFFF){e.command=IoHomeCommand::Private;e.param=3;e.heatingLength=3;e.heatingData[0]=3;e.heatingData[1]=e.heatingData[2]=0;}
+    else IoHomeAtlanticRead::build(sample.reg>>8,sample.reg,e.heatingData);
+    e.maxAttempts=1;e.active=true;e.background=true;
     if(queuePush(e)){sample.result=R::Queued;mRegisterReadPending=true;}
 }
 void IoHomeController::finishAtlanticRegisterRead(const IoHomeQueueEntry &e,IoHomeCommandExchangeResult result)
@@ -2421,15 +2446,34 @@ void IoHomeController::finishAtlanticRegisterRead(const IoHomeQueueEntry &e,IoHo
     if(!e.registerReadToken||!registerReadActive()||e.registerReadToken!=mRegisterRead->token)return;
     auto &sample=mRegisterRead->samples[mRegisterRead->completed];
     if(!atlanticRegisterContextMatches(e)){sample.result=R::IdentityChanged;mRegisterRead->active=false;return;}
+    if(result==IoHomeCommandExchangeResult::AuthenticatedUnconfirmed&&mSawChallenge&&mAuthResponseSent&&
+       mRegisterRead->completed==mRegisterRead->writeIndex){
+        // Observe actual state after an unconfirmed typed write; never replay the write.
+        sample.result=R::Unconfirmed;++mRegisterRead->completed;mRegisterReadPending=false;mRegisterReadNext=millis()+1000;return;
+    }
     if(result!=IoHomeCommandExchangeResult::Completed) {
         sample.result=result==IoHomeCommandExchangeResult::ExplicitlyRejected?R::Rejected:
             (mSawChallenge&&mAuthResponseSent)?R::Unconfirmed:R::NoReply;
         mRegisterRead->active=false;mRegisterReadPending=false;return;
     }
-    if(!IoHomeAtlanticRead::reply(sample.reg,mRxFrame.data,mRxFrame.dataLen,sample)) {
+    if(!decodeAtlanticJobReply(e,sample)) {
         sample.result=R::Failed;mRegisterRead->active=false;return;
     }
     sample.receivedMs=mLastRxReadMs;
+    if(sample.reg==0x119)recordHeatingModelName(channelForQueueEntry(e),sample.data,sample.length,sample.receivedMs);
+    using A=IoHomeAtlanticRead::Action;auto &job=*mRegisterRead;
+    if(job.model==IoHomeAtlanticRead::Model::Calypso&&sample.reg==6&&sample.length==1)job.dhw.observeMode(sample.data[0]);
+    if(job.model==IoHomeAtlanticRead::Model::Calypso&&sample.reg==4){uint32_t wh=0;if(IoHomeDhwCodec::energyWh(sample.data,sample.length,wh))job.dhw.observeEnergy(wh);}
+    if(job.action==A::AdelisWrite&&job.completed==2){job.readbackVerified=sample.length==1&&sample.data[0]==job.desired;
+        if(!job.readbackVerified){sample.result=R::Rejected;job.active=false;return;}}
+    if(job.action==A::DhwMode&&job.completed==2){job.readbackVerified=sample.length==1&&sample.data[0]==job.desired;
+        if(!job.readbackVerified){sample.result=R::Rejected;job.active=false;return;}job.dhw.observeMode(sample.data[0]);}
+    if(job.action==A::DhwTarget&&job.completed==3){if(sample.length!=1||sample.data[0]<1||sample.data[0]>2){sample.result=R::Rejected;job.active=false;return;}job.dhw.observeMode(sample.data[0]);}
+    if(sample.reg==0xFFFF&&job.completed!=job.writeIndex){IoHomeFrame frame=mRxFrame;uint16_t target=0;
+        if(!IoHomeDhwCodec::statusTarget(frame,target)){sample.result=R::Failed;job.active=false;return;}
+        job.dhw.targetRaw=target;job.dhw.targetValid=job.dhw.modeValid&&job.dhw.mode!=0;
+        if(job.action==A::DhwTarget){job.readbackVerified=target==job.targetRaw;if(!job.readbackVerified){sample.result=R::Rejected;job.active=false;return;}}
+    }
     ++mRegisterRead->completed;mRegisterReadPending=false;
     if(mRegisterRead->completed==mRegisterRead->count)mRegisterRead->active=false;
     else mRegisterReadNext=millis()+1000;
@@ -2437,10 +2481,12 @@ void IoHomeController::finishAtlanticRegisterRead(const IoHomeQueueEntry &e,IoHo
 void IoHomeController::printAtlanticRegisterRead() const
 {
     if(!mRegisterRead){logInfoP("Atlantic read none");return;}
-    logInfoP("Atlantic read token=%lu active=%u completed=%u count=%u; read-only session diagnostics",(unsigned long)mRegisterRead->token,registerReadActive(),mRegisterRead->completed,mRegisterRead->count);
-    if(mRegisterRead->token&&(mRegisterReadGateway!=mOwnNodeId||std::memcmp(mRegisterReadSystemKey,mSystemKey,16)||!sampleIdentityMatches(mRegisterRead->channel,mRegisterReadPeer,mRegisterReadKey,mRegisterReadRevision))) {
+    logInfoP("Atlantic job token=%lu active=%u completed=%u count=%u; inspect action/readback state, physical effect unknown",(unsigned long)mRegisterRead->token,registerReadActive(),mRegisterRead->completed,mRegisterRead->count);
+    if(mRegisterRead->token&&(mRegisterReadGateway!=mOwnNodeId||std::memcmp(mRegisterReadSystemKey,mSystemKey,16)||!sampleIdentityMatches(mRegisterRead->channel,mRegisterReadPeer,mRegisterReadKey,mRegisterReadRevision)||
+        uint8_t(mModule->getChannel(mRegisterRead->channel)->selectedHeatingModel())!=mRegisterRead->modelSelection)) {
         logInfoP("Atlantic read identity changed; values withheld");return;
     }
+    logInfoP("Atlantic action=%u readback_verified=%u dhw_target_valid=%u",unsigned(mRegisterRead->action),mRegisterRead->readbackVerified,mRegisterRead->dhw.visibleTarget());
     for(uint8_t i=0;i<mRegisterRead->count;++i) {
         const auto &sample=mRegisterRead->samples[i];const auto value=IoHomeAtlanticRead::decode(mRegisterRead->model,sample);
         logInfoP("Atlantic read reg=%04X result=%u len=%u received_ms=%lu raw=%s decoded=%u candidate=%u scaled=%lld unit=%s physical_effect=unknown",
@@ -2453,6 +2499,8 @@ bool IoHomeController::requestHeatingRegister(IoHomecontrolChannel *channel,uint
     const uint8_t c=channelIndexFor(channel);
     if(!channel||c>=16||!channel->isPaired()||channel->is1W()||
        !IoHomeHeating::actuator(channel->getProtocolIdentity())||channel->getProtocolIdentity().ioAddress!=channel->getNodeId()||!mModule||!mModule->managementRequestsAllowed())return false;
+    if(channel->selectedHeatingModel()!=IoHomeAdelis::HeatingModel::Agilia)return false;
+    if(!qualifiedHeatingName(channel,IoHomeAdelis::HeatingModel::Agilia))return false;
     if(reg==0x0110&&write&&!channel->agiliaHomeAwayEnabled()){
         mHeating[c].presenceResult=IoHomeHeating::PresenceResult::QualificationBlocked;channel->onHomeAwayCommandStatus();return false;
     }
@@ -2497,7 +2545,9 @@ bool IoHomeController::heatingContextMatches(const IoHomeQueueEntry &entry) cons
     const auto &state=mHeating[entry.sourceChannelIndex];
     const auto *ch=mModule?mModule->getChannel(entry.sourceChannelIndex):nullptr;
     if(entry.heatingData[1]==0x61 && entry.heatingData[3]==0x10 && (!ch||!ch->agiliaHomeAwayEnabled()))return false;
-    return ch&&!ch->is1W()&&IoHomeHeating::actuator(ch->getProtocolIdentity())&&ch->getProtocolIdentity().ioAddress==entry.destNodeId&&
+    return ch&&ch->selectedHeatingModel()==IoHomeAdelis::HeatingModel::Agilia&&
+        qualifiedHeatingName(const_cast<IoHomecontrolChannel*>(ch),IoHomeAdelis::HeatingModel::Agilia)&&
+        !ch->is1W()&&IoHomeHeating::actuator(ch->getProtocolIdentity())&&ch->getProtocolIdentity().ioAddress==entry.destNodeId&&
         state.busy&&state.token==entry.heatingToken&&state.gateway==mOwnNodeId&&
         state.node==entry.destNodeId&&state.revision==ch->productContextRevision()&&
         sampleIdentityMatches(entry.sourceChannelIndex,entry.destNodeId,entry.managementKey,state.revision);
@@ -2586,7 +2636,7 @@ void IoHomeController::serviceHeating()
         auto &state=mHeating[c];auto *ch=mModule->getChannel(c);
         if(state.node&&(!ch||!IoHomeHeating::actuator(ch->getProtocolIdentity())||state.gateway!=mOwnNodeId||
             !sampleIdentityMatches(c,state.node,state.key,state.revision))) {state.invalidate();continue;}
-        if(!ch||ch->is1W()||!ch->isPaired()||!IoHomeHeating::actuator(ch->getProtocolIdentity())||ch->getProtocolIdentity().ioAddress!=ch->getNodeId())continue;
+        if(!ch||ch->selectedHeatingModel()!=IoHomeAdelis::HeatingModel::Agilia||ch->is1W()||!ch->isPaired()||!IoHomeHeating::actuator(ch->getProtocolIdentity())||ch->getProtocolIdentity().ioAddress!=ch->getNodeId())continue;
         if(state.busy||!idleForManagedOperation()||(!debugRfLimitsBypassed()&&mHeatingNextAdmissionMs&&int32_t(millis()-mHeatingNextAdmissionMs)<0))continue;
         if((state.refreshRemaining || state.pollIntervalMs) &&
            (!state.nextPollMs || int32_t(millis()-state.nextPollMs)>=0)){
@@ -9199,7 +9249,7 @@ void IoHomeController::processResponse()
         if(last.valid&&last.node!=mOwnNodeId)disposition=IoHomeResponseDisposition::Ignore;
     }
     if(disposition==IoHomeResponseDisposition::Ignore) {if (auto *counters=activeAttemptCounters()) ++counters->rxUnmatched;mCurrentCmd.sawUnexpectedResponse=true;recordTwoWayTrace("rx_unexpected",mRxFrame,mRxRawLen);dispatchRxFrame();mState=ControllerState::WaitResponse;return;}
-    if (mCurrentCmd.background && mCurrentCmd.command == IoHomeCommand::Private &&
+    if (!mCurrentCmd.registerReadToken && mCurrentCmd.background && mCurrentCmd.command == IoHomeCommand::Private &&
         mCurrentCmd.param == 3 && mRxFrame.commandId == IoHomeCommand::PrivateResponse &&
         mRxFrame.dataLen < 8)
     {
@@ -9272,7 +9322,7 @@ void IoHomeController::processResponse()
     if(mCurrentCmd.registerReadToken) {
         const bool expired=uint32_t(millis()-mExchangeStartMs)>=mCurrentCmd.sessionPolicy.totalBudgetMs||
             uint32_t(millis()-mStateTimer)>=mResponseTimeoutMs;
-        if(expired||mLastResponseFreqIdx!=mCurrentCmd.twoWayTxFreqIdx||(mRxFrame.ctrlByte0&IOHC_CTRL0_MODE_1W)) {mState=ControllerState::WaitResponse;return;}
+        if(expired||mLastResponseFreqIdx!=mCurrentCmd.twoWayTxFreqIdx||(mRxFrame.ctrlByte0&(IOHC_CTRL0_MODE_1W|IOHC_CTRL0_START))||!(mRxFrame.ctrlByte0&IOHC_CTRL0_END)) {mState=ControllerState::WaitResponse;return;}
         if(!atlanticRegisterContextMatches(mCurrentCmd)) {
             notifyCommandExchangeResult(mCurrentCmd,IoHomeCommandExchangeResult::FailedBeforeAuthentication);
             mCurrentCmd.active=false;mState=ControllerState::Idle;return;
@@ -9280,8 +9330,8 @@ void IoHomeController::processResponse()
         if(mRxFrame.commandId!=IoHomeCommand::ChallengeRequest&&mRxFrame.commandId!=IoHomeCommand::ErrorResponse) {
             IoHomeAtlanticRead::Sample sample;
             const uint16_t reg=uint16_t(mCurrentCmd.heatingData[2])<<8|mCurrentCmd.heatingData[3];
-            if(mRxFrame.commandId!=IoHomeCommand::WritePrivateResponse||!mSawChallenge||!mAuthResponseSent||
-               !IoHomeAtlanticRead::reply(reg,mRxFrame.data,mRxFrame.dataLen,sample)) {mState=ControllerState::WaitResponse;return;}
+            if(!mSawChallenge||!mAuthResponseSent||
+               !decodeAtlanticJobReply(mCurrentCmd,sample)) {mState=ControllerState::WaitResponse;return;}
         }
     }
     if(mCurrentCmd.objectReadToken) {
@@ -9433,7 +9483,7 @@ void IoHomeController::processResponse()
         mTrustRxPosition = false;
     }
     mCorrelatedStatusReply=!lExplicitFailure;
-    if(!lCompletedCmd.sensorSubscriptionToken)dispatchRxFrame();
+    if(!lCompletedCmd.sensorSubscriptionToken&&!lCompletedCmd.registerReadToken)dispatchRxFrame();
     mCorrelatedStatusReply=false;
     mTrustRxPosition = lPreviousTrustRxPosition;
     if (lAuthenticatedDirectedDiscovery && mModule)
@@ -12221,7 +12271,8 @@ bool IoHomeController::buildTxFrame(const IoHomeQueueEntry &iEntry)
                                              : IOHC_ACEI_DEFAULT;
             // 2W Execute: challenge-response authentication. Keep the
             // payload bytes in the central reference-template builders above.
-            if (iEntry.twoWayRawExecute)
+            if(iEntry.registerReadToken){if(!atlanticRegisterContextMatches(iEntry)||iEntry.heatingLength!=6)return false;std::memcpy(mTxFrame.data,iEntry.heatingData,6);mTxFrame.dataLen=6;}
+            else if (iEntry.twoWayRawExecute)
             {
                 // Diagnostic path: only the payload is supplied raw. Rebuild
                 // the complete request so the ordinary queue/exchange engine
@@ -12490,8 +12541,10 @@ bool IoHomeController::buildTxFrame(const IoHomeQueueEntry &iEntry)
     case IoHomeCommand::WritePrivate:
     {
         if(iEntry.registerReadToken) {
-            if(!atlanticRegisterContextMatches(iEntry)||iEntry.heatingLength!=4||iEntry.heatingData[1]!=0x60)return false;
-            std::memcpy(mTxFrame.data,iEntry.heatingData,4);mTxFrame.dataLen=4;mTxFrame.hasHmac=false;mAuthResponseSent=false;break;
+            if(!atlanticRegisterContextMatches(iEntry)||iEntry.heatingLength<4||iEntry.heatingLength>6)return false;
+            const bool write=mRegisterRead->completed==mRegisterRead->writeIndex;
+            if(iEntry.heatingData[0]!=0x0C||iEntry.heatingData[1]!=(write?0x61:0x60))return false;
+            std::memcpy(mTxFrame.data,iEntry.heatingData,iEntry.heatingLength);mTxFrame.dataLen=iEntry.heatingLength;mTxFrame.hasHmac=false;mAuthResponseSent=false;break;
         }
         if(iEntry.heatingToken||iEntry.atlanticToken){
             if(!heatingContextMatches(iEntry)||iEntry.heatingLength<4||iEntry.heatingLength>6)return false;
@@ -12611,7 +12664,7 @@ void IoHomeController::dispatchRxFrame()
     uint32_t lSrcNode = mRxFrame.getSrcNodeId();
     uint32_t lDestNode = mRxFrame.getDestNodeId();
     // A duplicate direct sensor final must not open another inbound challenge/ACK.
-    if(mRxFrame.commandId==IoHomeCommand::StatusUpdate&&lDestNode==mOwnNodeId&&!(mRxFrame.ctrlByte0&IOHC_CTRL0_MODE_1W))
+    if(!mInboundVerified&&mRxFrame.commandId==IoHomeCommand::StatusUpdate&&lDestNode==mOwnNodeId&&!(mRxFrame.ctrlByte0&IOHC_CTRL0_MODE_1W))
         for(auto *n=mSolarSensors.get();n;n=n->next.get()){
             const auto &sensor=n->state;const auto &sample=sensor.event==0x2005?sensor.sun:sensor.battery;
             if(solarIdentityMatches(sensor)&&!sensor.pending&&sensor.outcome==2&&sensor.node==lSrcNode&&
@@ -14598,3 +14651,5 @@ uint32_t IoHomeController::pairingDirectedTxFrequency()const
 }
 
 #include "IoHomeSolarSensors.inc"
+
+#include "IoHomeAtlanticActions.inc"
