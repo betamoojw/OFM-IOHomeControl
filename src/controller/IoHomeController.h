@@ -1322,9 +1322,9 @@ public:
   bool configureLinkedRemoteSettling(uint16_t quietMs);
   bool configureRemoteSettling(uint8_t group,uint16_t channelMask,uint16_t quietMs);
   struct ChallengeTiming {
-    uint32_t peer=0,rxReadUs=0,hmacStartUs=0,hmacEndUs=0,prepareStartUs=0,prepareEndUs=0,txRequestUs=0,txAcceptedUs=0,txDoneObservedUs=0;
+    uint32_t peer=0,rxReadUs=0,hmacStartUs=0,hmacEndUs=0,prepareStartUs=0,prepareEndUs=0,txRequestUs=0,txAcceptedUs=0,txDoneObservedUs=0,rxRearmedUs=0;
     uint16_t cachedIrq=0;uint8_t frequency=0xFF;int8_t prepareResult=0,txResult=0;
-    bool hmacRecorded=false,prepareRecorded=false,txRequested=false,txAccepted=false,txDoneObserved=false;
+    bool hmacRecorded=false,prepareRecorded=false,txRequested=false,txAccepted=false,txDoneObserved=false,rxRearmed=false;
   };
   bool enableChallengeTiming(bool enabled);
   const ChallengeTiming *lastChallengeTiming()const{return mChallengeTimings&&mChallengeTimingCount?&mChallengeTimings[(mChallengeTimingCount-1)%8]:nullptr;}

@@ -9,3 +9,10 @@ The new RS100 captures still contain zero in the second local-sensor body byte. 
 The source archive and raw acquisition metadata are retained privately in `Velocet/Findings/2026-11-08-qualified-sensors-and-atlantic/`. No private key, missing proof bytes, unconfirmed physical effect or newly successful remote CI is inferred from the baseline.
 
 The public importer additionally enforces exact reviewed register widths and factory model names. Weekly schedule bodies and possible/unreviewed trailers remain omitted, even when a source YAML contains them. Originals stay private; the public fixture retains source hashes and omission counts.
+
+### Challenge duration and remaining physical qualification
+
+Source: [upstream timing implementation](https://github.com/laberning/home_io_control/blob/38ac7461548a4dae5d1636735fdbc4a12ba46fa2/src/protocol/exchange_engine.cpp).
+OFM `answer_us` starts at return from complete packet read and ends at successful RX rearm after the challenge answer. It includes correlation, HMAC, preparation, TX airtime and the observed TxDone; it is invalid until both TxDone and RX rearm succeed. Upstream starts at challenge acceptance, so these timestamps are not interchangeable. Neither clock measures the physical first preamble edge or interrupt edge. Critical logging remains suppressed through RX rearm. The native busy-RX regression is synthetic (S), not a hardware latency measurement.
+
+MOTO1000 still requires a controlled INFO/DEBUG A/B measurement with identical preamble and physical TX/RX observations. No timeout or preamble default changes follow from the combined settings reported in [issue 163](https://github.com/laberning/home_io_control/issues/163).

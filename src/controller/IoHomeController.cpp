@@ -8741,7 +8741,7 @@ void IoHomeController::processTxInProgress()
         if(auto *timing=activeChallengeTiming())if(mQueuedTxFrame.commandId==IoHomeCommand::ChallengeResponse&&lObservedDone){
             timing->txDoneObservedUs=micros();timing->txDoneObserved=true;timing->cachedIrq=radioHealth().lastIrqStatus;
         }
-        mChallengeCritical=false;
+        // Keep logging suppressed until RX has actually been re-armed.
         recordRadioTiming(IoHomeTimingEvent::ControllerDone);
         if (!mQueuedTxDoneObserved)
         {
@@ -8800,6 +8800,11 @@ void IoHomeController::processTxInProgress()
         }
         mRxScanLastSwitch = micros();
         mAttemptRxReadyUs = micros();
+        if(mChallengeTimings&&mChallengeTimingCount&&mQueuedTxFrame.commandId==IoHomeCommand::ChallengeResponse){
+            auto &timing=mChallengeTimings[(mChallengeTimingCount-1)%8];
+            if(timing.txAccepted&&!timing.rxRearmed&&timing.peer==mCurrentCmd.destNodeId){timing.rxRearmedUs=mAttemptRxReadyUs;timing.rxRearmed=true;}
+        }
+        mChallengeCritical=false;
         recordTwoWayTrace("rx_ready", mQueuedTxFrame, mQueuedTxWireLength);
         if (mCurrentCmd.command == IoHomeCommand::Discover2ERequest &&
             !mAuthResponseSent && mDirectedRxReadyUs == 0)
@@ -14641,6 +14646,9 @@ void IoHomeController::printChallengeTiming()const
             (unsigned long)t.peer,t.frequency,(unsigned long)t.rxReadUs,(unsigned long)t.hmacStartUs,(unsigned long)t.hmacEndUs,
             (unsigned long)t.prepareStartUs,(unsigned long)t.prepareEndUs,int(t.prepareResult),(unsigned long)t.txRequestUs,
             (unsigned long)t.txAcceptedUs,int(t.txResult),(unsigned long)t.txDoneObservedUs,t.hmacRecorded,t.prepareRecorded,t.txRequested,t.txAccepted,t.txDoneObserved,t.cachedIrq);
+        logInfoP("Challenge answer_us_valid=%u answer_us=%lu rx_rearmed_us=%lu start=complete_packet_read_return end=successful_rx_rearm_return physical_edges=unknown",
+            t.rxRearmed&&t.txDoneObserved,static_cast<unsigned long>(t.rxRearmed&&t.txDoneObserved?uint32_t(t.rxRearmedUs-t.rxReadUs):0),
+            (unsigned long)t.rxRearmedUs);
     }
 }
 

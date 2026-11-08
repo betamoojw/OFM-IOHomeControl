@@ -8,6 +8,8 @@ TEST(controller_challenge_timing_records_local_stages_without_changing_authentic
     const auto *t=c.lastChallengeTiming();ASSERT_TRUE(t);ASSERT_EQ(t->peer,0x222222U);
     ASSERT_TRUE(t->hmacRecorded&&t->prepareRecorded&&t->txRequested&&t->txAccepted);
     ASSERT_TRUE(uint32_t(t->hmacStartUs-t->rxReadUs)<1000000U);ASSERT_TRUE(uint32_t(t->hmacEndUs-t->hmacStartUs)<1000000U);
-    c.loop();ASSERT_TRUE(c.lastChallengeTiming()->txDoneObserved);
+    c.radio().testSetReceiveBusyCount(1);c.loop();ASSERT_TRUE(c.lastChallengeTiming()->txDoneObserved);ASSERT_TRUE(!c.lastChallengeTiming()->rxRearmed);
+    c.loop();ASSERT_TRUE(c.lastChallengeTiming()->rxRearmed);
+    ASSERT_TRUE(uint32_t(c.lastChallengeTiming()->rxRearmedUs-c.lastChallengeTiming()->rxReadUs)<1000000U);
     ASSERT_TRUE(!ch.testHasPositionFeedback());ASSERT_TRUE(!c.lastTwoWayOutcome().transportComplete);
 }
