@@ -4622,6 +4622,12 @@ bool IoHomecontrol::processCommand(const std::string iCmd, bool iDebugKo)
            (std::strcmp(value,"on")&&std::strcmp(value,"off"))){logInfoP("Usage: iohc window main-only CHANNEL on|off");return true;}
         auto *channel=mChannels[index-1];logInfoP("Window main-only configured=%u volatile; no immediate RF",channel&&channel->setWindowMainOnly(!std::strcmp(value,"on")));return true;
     }
+    if(iCmd.rfind("iohc remote settle-linked ",0)==0) {
+        if(iDebugKo){logInfoP("Linked remote settling requires local console");return true;}
+        unsigned quiet=0;char extra=0;
+        if(sscanf(iCmd.c_str(),"iohc remote settle-linked %u %c",&quiet,&extra)!=1||quiet>30000){logInfoP("Usage: iohc remote settle-linked QUIET_MS (500..30000, 0 disables group 1)");return true;}
+        logInfoP("Linked remote union configured=%u volatile; uses group 1",mController.configureLinkedRemoteSettling(quiet));return true;
+    }
     if(iCmd.rfind("iohc remote settle ",0)==0) {
         if(iDebugKo){logInfoP("Remote settling requires local console");return true;}
         unsigned group=0,mask=0,quiet=0;char extra=0;

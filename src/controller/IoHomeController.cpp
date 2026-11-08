@@ -6755,6 +6755,10 @@ void IoHomeController::processPendingDiscoveryResponses()
 void IoHomeController::recordTwoWayTrace(const char *event,const IoHomeFrame &frame,uint8_t wireLength)
 {
     if(frame.ctrlByte0&IOHC_CTRL0_MODE_1W)return;
+    if(!std::strcmp(event,"tx_started")||!std::strcmp(event,"tx_done_observed")||!std::strcmp(event,"rx_ready")||
+       !std::strcmp(event,"rx_correlated")||!std::strcmp(event,"exchange_completed")||!std::strcmp(event,"exchange_failed")||!std::strcmp(event,"response_timeout")){
+        mLastManagedRfMs=millis();mManagedRfObserved=true;
+    }
     auto &p=mTwoWayTrace[mTwoWayTraceCount%kTwoWayTraceCapacity];p={};
     p.id=++mTwoWayTraceCount;p.event=event;
     p.trustedStatus=!std::strcmp(event,"status_local_correlated")||!std::strcmp(event,"status_inbound_authenticated");
@@ -14568,7 +14572,7 @@ void IoHomeController::printAtlanticStatus() const
 // https://github.com/laberning/home_io_control/issues/209
 bool IoHomeController::remoteSettleIdentityValid(const RemoteSettleGroup &g) const
 {
-    if(!g.mask||g.gateway!=mOwnNodeId||std::memcmp(g.systemKey,mSystemKey,16))return false;
+    if(!g.mask||g.gateway!=mOwnNodeId||std::memcmp(g.systemKey,mSystemKey,16)||(g.linkedMap&&g.mappingHash!=linkedRemoteMapHash()))return false;
     for(uint8_t i=0;i<16;++i)if(g.mask&(1U<<i))
         if(!sampleIdentityMatches(i,g.members[i].node,g.members[i].key,g.members[i].revision))return false;
     return true;
@@ -14598,7 +14602,6 @@ bool IoHomeController::settleRemoteActivity(uint32_t source)
         bool linked=false;for(uint8_t i=0;i<16;++i)if(group.mask&(1U<<i))
             for(uint8_t j=0;j<remote->linkCount;++j)linked=linked||remote->linkedDevices[j]==group.members[i].node;
         if(!linked)continue;matched=true;
-        if(group.dispatched&&uint32_t(now-group.dispatchedMs)<60000U)continue;
         if(!group.pending){group.firstMs=now;group.pending=true;}
         group.lastMs=now;
     }
@@ -14610,8 +14613,10 @@ void IoHomeController::serviceRemoteSettling()
     for(uint8_t g=0;g<4;++g){auto &group=mRemoteSettling[g];if(!group.mask)continue;
         if(!remoteSettleIdentityValid(group)){group={};continue;}
         if(!group.pending)continue;
+        if(mManagedRfObserved&&int32_t(mLastManagedRfMs-group.lastMs)>0)group.lastMs=mLastManagedRfMs;
         if(uint32_t(now-group.firstMs)>=600000U){group.pending=false;continue;}
-        if(mPassiveMode||mRadio.isPacketAvailable()||mState!=ControllerState::Idle||!queueEmpty()||uint32_t(now-group.lastMs)<group.quietMs)continue;
+        if((group.dispatched&&uint32_t(now-group.dispatchedMs)<60000U)||mPassiveMode||mRadio.isPacketAvailable()||mCurrentCmd.active||
+           mState!=ControllerState::Idle||!queueEmpty()||uint32_t(now-group.lastMs)<group.quietMs)continue;
         group.pending=false;group.dispatched=true;group.dispatchedMs=now;
         // Reuse the channel's existing epoch/backoff/low-power policy and queue.
         // Include members whose own remote was NOT heard during half-duplex TX.
@@ -14657,3 +14662,22 @@ uint32_t IoHomeController::pairingDirectedTxFrequency()const
 #include "IoHomeSolarSensors.inc"
 
 #include "IoHomeAtlanticActions.inc"
+
+uint32_t IoHomeController::linkedRemoteMapHash()const {
+    uint32_t value=2166136261U;if(!mModule)return value;
+    const auto mix=[&](uint32_t input){for(uint8_t b=0;b<4;++b)value=(value^uint8_t(input>>(b*8)))*16777619U;};
+    for(uint8_t i=0;i<IOHC_REMOTE_MAX_ENTRIES;++i)if(const auto *remote=mModule->remoteMap().entry(i)){
+        mix(remote->address);mix(remote->linkCount);for(uint8_t b:remote->key)mix(b);
+        for(uint8_t j=0;j<remote->linkCount;++j)mix(remote->linkedDevices[j]);
+    }
+    return value;
+}
+bool IoHomeController::configureLinkedRemoteSettling(uint16_t quietMs) {
+    if(!quietMs)return configureRemoteSettling(0,0,0);if(!mModule)return false;uint16_t mask=0;
+    for(uint8_t r=0;r<IOHC_REMOTE_MAX_ENTRIES;++r)if(const auto *remote=mModule->remoteMap().entry(r))
+        for(uint8_t l=0;l<remote->linkCount;++l)for(uint8_t c=0;c<16;++c){auto *ch=mModule->getChannel(c);
+            if(ch&&ch->isPaired()&&!ch->is1W()&&ch->allowsActuatorControls()&&ch->getNodeId()==remote->linkedDevices[l])mask|=1U<<c;
+        }
+    if(!mask||(mask&(mask-1))==0||!configureRemoteSettling(0,mask,quietMs))return false;
+    mRemoteSettling[0].linkedMap=true;mRemoteSettling[0].mappingHash=linkedRemoteMapHash();return true;
+}

@@ -1319,6 +1319,7 @@ public:
   // Radio RSSI of last received packet
   int16_t lastRssi() const;
 
+  bool configureLinkedRemoteSettling(uint16_t quietMs);
   bool configureRemoteSettling(uint8_t group,uint16_t channelMask,uint16_t quietMs);
   struct ChallengeTiming {
     uint32_t peer=0,rxReadUs=0,hmacStartUs=0,hmacEndUs=0,prepareStartUs=0,prepareEndUs=0,txRequestUs=0,txAcceptedUs=0,txDoneObservedUs=0;
@@ -1356,9 +1357,12 @@ private:
     struct Member {uint32_t node=0,revision=0;uint8_t key[16]{};} members[16];
     uint32_t gateway=0,firstMs=0,lastMs=0,dispatchedMs=0;
     uint8_t systemKey[16]{};
-    uint16_t mask=0,quietMs=0;bool pending=false,dispatched=false;
+    uint32_t mappingHash=0;
+    uint16_t mask=0,quietMs=0;bool pending=false,dispatched=false,linkedMap=false;
   };
   std::unique_ptr<RemoteSettleGroup[]> mRemoteSettling;
+  uint32_t mLastManagedRfMs=0;bool mManagedRfObserved=false;
+  uint32_t linkedRemoteMapHash()const;
   bool remoteSettleIdentityValid(const RemoteSettleGroup &group) const;
   bool settleRemoteActivity(uint32_t source);
   void serviceRemoteSettling();
